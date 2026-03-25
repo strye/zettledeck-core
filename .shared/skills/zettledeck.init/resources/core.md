@@ -44,7 +44,7 @@ Also update `obsidian.vault` skill's vault path reference if a custom path was g
 
 **What:** Define the vault's top-level organizational folders. These determine where scopes are placed.
 
-**File:** `vault-steering.md` — Section 8 (Vault Placement Rules)
+**File:** `obsidian.vault/resources/vault-defaults.md` — Section 2 (Top-Level Folder Structure)
 
 **Show the user** the current template defaults:
 
@@ -55,8 +55,6 @@ Also update `obsidian.vault` skill's vault path reference if a custom path was g
 | Academic or domain research | `20_Research/` |
 | Daily journaling, reflection | `30_Journal/` |
 | Career, professional development | `40_Professional/` |
-| Creative writing, art, music | `80_Creator/` |
-| Hobbies, games | `90_Hobbies/` |
 | Quick capture, scratch notes | `Void/` |
 
 **Questions:**
@@ -69,7 +67,7 @@ Also update `obsidian.vault` skill's vault path reference if a custom path was g
 
 **How to apply:**
 
-Replace the table in Section 8 of `vault-steering.md` with the user's choices. Also update the subType table in Section 5 to match the folder names.
+Replace the table in Section 2 of `vault-defaults.md` with the user's choices. Also update the subType table in Section 3 (under scope) to match the folder names.
 
 ---
 
@@ -77,7 +75,7 @@ Replace the table in Section 8 of `vault-steering.md` with the user's choices. A
 
 **What:** Define what kinds of scopes live in each top-level folder. These drive document categorization.
 
-**File:** `vault-steering.md` — Section 5 (scope subTypes table)
+**File:** `obsidian.vault/resources/vault-defaults.md` — Section 3 (scope subTypes table)
 
 **Questions:**
 
@@ -89,7 +87,7 @@ For each top-level folder the user kept or added:
 
 **How to apply:**
 
-Update the scope subTypes table in Section 5 of `vault-steering.md`.
+Update the scope subTypes table in Section 3 of `vault-defaults.md`.
 
 ---
 
@@ -102,11 +100,11 @@ Update the scope subTypes table in Section 5 of `vault-steering.md`.
 **Questions:**
 
 1. "Where should tasks without a date context be collected? This is your task inbox."
-   - Default: `filo-fax/actions/actions.md` under `## Inbox`
+   - Default: `Almanac/actions/actions.md` under `## Inbox`
    - Alternative: any path the user prefers
 
 2. "Where should completed tasks be archived after 14 days?"
-   - Default: `filo-fax/actions/actions-archive.md`
+   - Default: `Almanac/actions/actions-archive.md`
    - Alternative: any path the user prefers
 
 3. "Is 14 days the right archival threshold, or would you prefer a different window?"
@@ -130,7 +128,7 @@ Add task configuration to the project's CLAUDE.md:
 
 **What:** Confirm the Zettldex naming pattern and scope ID format.
 
-**File:** `vault-steering.md` — Sections 4 and 9
+**File:** `obsidian.vault/resources/vault-defaults.md` — Sections 1 and 5
 
 **Questions:**
 
@@ -144,7 +142,7 @@ Add task configuration to the project's CLAUDE.md:
 
 **How to apply:**
 
-If the user chooses defaults, no changes needed — the template is already configured. If they want a different pattern, update Sections 4 and 9 of `vault-steering.md`.
+If the user chooses defaults, no changes needed — the template is already configured. If they want a different pattern, update Sections 1 and 5 of `vault-defaults.md`.
 
 ---
 
@@ -152,20 +150,20 @@ If the user chooses defaults, no changes needed — the template is already conf
 
 **What:** Check if the user needs document types beyond the defaults, or wants to remove types they won't use.
 
-**File:** `vault-steering.md` — Sections 2 and 5
+**File:** `obsidian.vault/resources/vault-defaults.md` — Sections 1 and 3
 
 **Questions:**
 
-1. "Here are the available document types: scope, focus, project, objective, content, engagement, meeting, note, ideation, research, lexicon, tune, way. Do you need all of these, or are some irrelevant to your vault?"
-   - Common removals: lexicon (creative writing only), tune (music only), engagement (customer tracking)
-   - Suggest keeping the core set: scope, focus, project, content, meeting, note, research
+1. "The core document types are: focus, project, objective, content, meeting, note, ideation, research. There are also two optional types: scope (top-level container for grouping related work) and engagement (interaction tracking). Would you like to enable either of these?"
+   - Scope: explain that it's a powerful organizational layer but has a learning curve. Good for people managing distinct life/work domains. Can be enabled later.
+   - Engagement: useful for tracking customer, partner, or team interactions.
 
 2. "Do you have any document types you'd like to add?"
    - Custom types are possible but require updating the prefix table, zettldex codes, and placement rules
 
 **How to apply:**
 
-If types are removed, comment them out (don't delete — easier to re-enable). If types are added, extend the relevant tables.
+If optional types are enabled, uncomment them in Section 1 of `vault-defaults.md`. If custom types are added, extend the relevant tables.
 
 ---
 

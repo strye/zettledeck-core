@@ -1,92 +1,109 @@
 # zettledeck-core
 
-The foundation module for ZettleDeck — a structured markdown system for personal knowledge management, built on Obsidian.
+A project template for ZettleDeck — a structured markdown system for personal knowledge management, built on Obsidian.
 
 ## What This Is
 
-ZettleDeck organizes knowledge using a hierarchical vault structure (Scope → Focus → Project → documents) with consistent frontmatter, naming conventions, and task management. This core module provides:
+ZettleDeck organizes knowledge using a hierarchical vault structure with consistent frontmatter, naming conventions, and task management. Clone this template to start a new vault project. It includes:
 
-- **Vault steering template** — the structural framework for organizing your Obsidian vault (document types, hierarchical addressing via Zettldex, placement rules, frontmatter spec)
+- **Vault steering** — structural rules (`vault-steering.md`) and customizable defaults (`vault-defaults.md`) for document types, hierarchical addressing, placement, and frontmatter
 - **Markdown conventions** — rules for frontmatter management, wikilinks, editing practices, and status values
 - **Task management** — Obsidian Tasks plugin format with emoji signifiers, attribution patterns, priority levels, and archival conventions
 - **Obsidian vault skill** — CLI-based vault interaction (search, read, create, append, move, tags, links, tasks, properties)
 - **Project initialization** — interactive setup skill (`/zettledeck.init`) that walks you through customizing all configuration
-- **Compose tooling** — the `zd` script for installing and linking ZettleDeck modules
+- **Module composer** — the `zd` script for installing add-on modules
 
 ## Quick Start
 
-### New Project
-
 ```bash
-# 1. Copy the zd script somewhere on your PATH
-cp scripts/zd /usr/local/bin/zd
+# 1. Clone the template
+git clone https://github.com/strye/zettledeck-core.git my-vault
+cd my-vault
 
-# 2. In your new project directory
-cd ~/my-vault
-zd init
-
-# 3. Edit zettledeck.yml to configure your modules
-
-# 4. Install
-zd install
-
-# 5. Run interactive setup
+# 2. Run interactive setup (in Claude Code or Kiro)
 /zettledeck.init
-```
 
-### What `zd install` Does
+# 3. (Optional) Add add-on modules to .zettledeck/zettledeck.yml, then:
+.zettledeck/scripts/zd install
 
-1. Clones each declared module into `.zettledeck/modules/`
-2. Symlinks skill directories into `.shared/skills/`
-3. Symlinks agent definitions into `.claude/agents/`
-4. Copies template files (like `vault-steering.md`) to project root (won't overwrite existing)
-
-### Module Configuration
-
-Edit `zettledeck.yml` in your project root:
-
-```yaml
-modules:
-  - name: zettledeck-core
-    repo: github.com/strye/zettledeck-core
-    ref: main
-  - name: zettledeck-almanac
-    repo: github.com/strye/zettledeck-almanac
-    ref: main
-  # Add more modules as needed
-```
-
-### Updating
-
-```bash
-zd update    # Pull latest for all modules and re-link
-zd status    # See what's installed and linked
-zd link      # Re-link without pulling (after manual changes)
+# 4. Wire up your AI tool
+.zettledeck/scripts/zd setup
 ```
 
 ## Project Structure
 
 ```
-zettledeck-core/
-├── skills/
-│   ├── markdown.conventions/   # Reference skill — vault markdown rules
-│   │   ├── SKILL.md
-│   │   └── rules.md
-│   ├── task.management/        # Reference skill — task format and archival
-│   │   ├── SKILL.md
-│   │   └── rules.md
-│   ├── obsidian.vault/         # Invocable skill — CLI vault operations
-│   │   └── SKILL.md
-│   └── zettledeck.init/        # Invocable skill — interactive project setup
-│       ├── SKILL.md
-│       └── resources/
-│           └── core.md         # Core module init steps
-├── templates/
-│   └── vault-steering.md       # Vault organization template (customize for your vault)
-├── scripts/
-│   └── zd                      # Module composer CLI
+my-vault/
+├── .shared/                        # Shared assets (hidden from Obsidian)
+│   ├── skills/
+│   │   ├── markdown.conventions/   # Reference — vault markdown rules
+│   │   ├── task.management/        # Reference — task format and archival
+│   │   ├── obsidian.vault/         # Invocable — CLI vault operations
+│   │   │   └── resources/
+│   │   │       ├── vault-steering.md   # Structural rules (static)
+│   │   │       └── vault-defaults.md   # Customizable config
+│   │   └── zettledeck.init/        # Invocable — interactive project setup
+│   │       └── resources/
+│   │           └── core.md
+│   ├── agents/                     # Agent definitions
+│   ├── steering/                   # Steering files
+│   └── templates/                  # Template files
+├── .zettledeck/                    # Infrastructure (hidden from Obsidian)
+│   ├── zettledeck.yml              # Add-on module manifest
+│   ├── init-state.yml              # Init tracking (created by /zettledeck.init)
+│   └── scripts/
+│       └── zd                      # Module composer CLI
+├── .claude/                        # Claude Code wiring (created by zd setup)
+│   ├── skills → ../.shared/skills
+│   └── agents → ../.shared/agents
+├── .kiro/                          # Kiro wiring (created by zd setup)
+│   ├── skills → ../.shared/skills
+│   ├── steering → ../.shared/steering
+│   └── agents/                     # Individual symlinks + generated JSON
 └── README.md
 ```
+
+## The `zd` Script
+
+Located at `.zettledeck/scripts/zd`. Manages add-on modules and tool wiring.
+
+```bash
+zd install   # Install add-on modules from zettledeck.yml
+zd update    # Update installed modules to latest
+zd setup     # Create tool wiring (Claude Code / Kiro symlinks)
+zd status    # Show installed modules and wiring status
+```
+
+### What `zd install` Does
+
+1. Reads module declarations from `.zettledeck/zettledeck.yml`
+2. Clones each module to a temp directory
+3. Copies assets into `.shared/` (skills, agents, steering, templates)
+4. Copies module scripts into `.zettledeck/scripts/`
+5. Cleans up temp files
+
+### What `zd setup` Does
+
+Detects which AI tools are present and creates the appropriate wiring:
+
+- **Claude Code**: symlinks `.claude/skills` and `.claude/agents` to `.shared/`, checks `CLAUDE.md` for steering references
+- **Kiro**: symlinks `.kiro/skills` and `.kiro/steering` to `.shared/`, creates individual agent symlinks with companion JSON files
+
+### Module Configuration
+
+Edit `.zettledeck/zettledeck.yml`:
+
+```yaml
+modules:
+  - name: zettledeck-almanac
+    repo: github.com/strye/zettledeck-almanac
+    ref: main
+```
+
+### Requirements
+
+- `git`
+- `yq` — install with `brew install yq`
 
 ## Skills
 
@@ -107,7 +124,7 @@ Loaded automatically when creating or modifying tasks. Defines:
 - Waiting-for item format
 - Archival conventions (14-day threshold)
 
-**Note:** Archive and inbox paths are project-specific. Configure `task.actions_inbox` and `task.archive_path` in your project's CLAUDE.md.
+Archive and inbox paths are project-specific. Configure during `/zettledeck.init core`.
 
 ### obsidian.vault (invocable)
 
@@ -115,14 +132,11 @@ Full CLI interface to the Obsidian vault. Invoke with `/obsidian.vault [mode]`.
 
 **Modes:** `search`, `read`, `create`, `append`, `prepend`, `move`, `rename`, `delete`, `open`, `tags`, `links`, `backlinks`, `orphans`, `deadends`, `unresolved`, `tasks`, `properties`, `files`, `folders`, `outline`, `recents`, `vault`, `eval`
 
-**Requirements:**
-- Obsidian 1.12.4+
-- Obsidian running in background
-- CLI registered: Settings → General → Command line interface → Register CLI
+**Requirements:** Obsidian 1.12.4+, running in background, CLI registered.
 
 ### zettledeck.init (invocable)
 
-Interactive project setup that walks you through all configuration. Invoke with `/zettledeck.init`.
+Interactive project setup. Invoke with `/zettledeck.init`.
 
 ```
 /zettledeck.init              Run all available init steps
@@ -131,16 +145,19 @@ Interactive project setup that walks you through all configuration. Invoke with 
 /zettledeck.init status       Show what's configured
 ```
 
-Covers: vault identity, folder structure, scope subTypes, task inbox/archive paths, document naming, and document type selection. Each installed module can contribute its own init steps — the skill discovers them automatically.
+Covers: vault identity, folder structure, document types, task paths, naming conventions. Each installed module can contribute its own init steps.
 
-## Vault Steering Template
+## Vault Steering
 
-The `templates/vault-steering.md` file provides the structural framework for your vault. You can customize it manually or use `/zettledeck.init core` for an interactive walkthrough.
+Split into two files inside the `obsidian.vault` skill:
 
-The template includes `<!-- CUSTOMIZE -->` comments at the sections you should modify:
+- `resources/vault-steering.md` — the structural engine (addressing, front-matter spec, tag rules, validation). Stays static.
+- `resources/vault-defaults.md` — customizable document types, folder structure, naming conventions. Personalized during `/zettledeck.init core`.
 
-1. **Section 5** — Document subTypes per vault area
-2. **Section 8** — Top-level folder structure
+The defaults file includes `<!-- CUSTOMIZE -->` comments at the sections to modify:
+
+1. **Section 1** — Document types and prefix configuration
+2. **Section 2** — Top-level folder structure
 
 ## Available Modules
 
@@ -154,14 +171,12 @@ The template includes `<!-- CUSTOMIZE -->` comments at the sections you should m
 
 ## Tool Compatibility
 
-ZettleDeck skills work with any AI coding tool that supports the `.shared/skills/` convention:
-- **Claude Code** — reads from `.shared/skills/` via `.claude/` symlinks
-- **Kiro IDE** — reads from `.shared/skills/` via `.kiro/` symlinks
+ZettleDeck works with AI coding tools that support skill discovery:
 
-The `zd` script creates symlinks for Claude Code by default. For Kiro, create an additional symlink:
-```bash
-ln -s .shared/skills .kiro/skills
-```
+- **Claude Code** — `.claude/skills` and `.claude/agents` symlink to `.shared/`; steering referenced in `CLAUDE.md`
+- **Kiro IDE** — `.kiro/skills` and `.kiro/steering` symlink to `.shared/`; agents get individual symlinks with companion JSON
+
+Run `zd setup` to configure wiring for your tool automatically.
 
 ## License
 

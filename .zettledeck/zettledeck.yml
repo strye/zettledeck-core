@@ -1,0 +1,25 @@
+# ZettleDeck Module Configuration
+# Add-on modules to install into this project.
+# Core skills are included in the template — only declare add-on modules here.
+#
+# Each module is a git repository containing any combination of:
+#   skills/     — skill directories, copied into .shared/skills/
+#   agents/     — agent definitions, copied into .shared/agents/
+#   steering/   — steering files, copied into .shared/steering/
+#   templates/  — template files, copied into .shared/templates/
+#   scripts/    — helper scripts, copied into .zettledeck/scripts/
+
+modules: []
+  # Uncomment to add modules:
+  # - name: zettledeck-almanac
+  #   repo: github.com/strye/zettledeck-almanac
+  #   ref: main
+  # - name: zettledeck-nexus
+  #   repo: github.com/strye/zettledeck-nexus
+  #   ref: main
+  # - name: zettledeck-foundry
+  #   repo: github.com/strye/zettledeck-foundry
+  #   ref: main
+  # - name: rostrum-blackboard
+  #   repo: github.com/strye/rostrum-blackboard
+  #   ref: main

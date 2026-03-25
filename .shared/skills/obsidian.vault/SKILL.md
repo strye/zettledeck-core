@@ -178,7 +178,7 @@ obsidian create name="Note Name" content="..." open
 
 **When to use**: Creating a brand new note. Always confirm with user before creating, per recommend-first principle.
 
-**Format rules**: Follow vault-steering.md conventions for frontmatter, naming, and folder placement.
+**Format rules**: Follow `resources/vault-steering.md` and `resources/vault-defaults.md` conventions for frontmatter, naming, and folder placement.
 
 ---
 
@@ -554,7 +554,7 @@ Present a summarized list, grouped by priority or date. Propose next actions.
 - Follow recommend-first principle — propose actions before executing
 - Preserve frontmatter on all note operations
 - Use `append` over `create overwrite` when adding to existing notes
-- Follow vault-steering.md naming and folder conventions
+- Follow `resources/vault-steering.md` and `resources/vault-defaults.md` naming and folder conventions
 - Use bare flags (no `--` prefix)
 
 **Ask First:**

@@ -23,9 +23,9 @@ Interactive setup skill that walks users through customizing their ZettleDeck pr
 The skill discovers available init modules by scanning for resource files in two locations:
 
 1. **This skill's resources/** — ships with core, always available
-2. **`.zettledeck/modules/*/init-steps.md`** — contributed by installed modules
+2. **`.shared/skills/*/init-steps.md`** — contributed by installed add-on modules
 
-Each resource file defines the init steps for one module. When a module is installed via `zd install`, its `init-steps.md` is automatically available for discovery.
+Each resource file defines the init steps for one module. When a module is installed via `zd install`, its skills (including init-steps) are copied into `.shared/skills/`.
 
 ### Interaction Model
 
@@ -61,7 +61,7 @@ This allows `/zettledeck.init status` to report what's done and what still needs
 
 Before starting any module init:
 
-1. Check that `zettledeck.yml` exists (suggest `zd init` if not)
+1. Check that `.zettledeck/zettledeck.yml` exists
 2. Read `.zettledeck/init-state.yml` if it exists to know what's already configured
 3. If no module argument given, discover all available modules and present them:
    - "I found init steps for: **core**, **almanac**, **nexus**. Run all, or pick one?"
@@ -124,7 +124,7 @@ Instructions for what to write and where.
 
 **Order field:** Controls the sequence when running all modules. Core is `10`, use `20+` for add-on modules.
 
-**Discovery:** The `zd link` command makes `init-steps.md` available at `.zettledeck/modules/{module}/init-steps.md`. The init skill scans this path automatically.
+**Discovery:** When a module is installed via `zd install`, its skills are copied into `.shared/skills/`. If the module includes an `init-steps.md` in its skill directory, the init skill discovers it automatically.
 
 ---
 

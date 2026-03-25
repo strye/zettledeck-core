@@ -1,0 +1,577 @@
+#!/usr/bin/env bash
+#
+# zd — ZettleDeck module composer
+#
+# Manages installation, updates, and tool wiring for ZettleDeck add-on modules.
+# The core project is a template repo — this script handles add-on modules only.
+#
+# Usage:
+#   zd install          Install all add-on modules declared in zettledeck.yml
+#   zd update           Update all installed modules to latest
+#   zd setup            Create tool wiring (symlinks, Kiro JSON, CLAUDE.md check)
+#   zd status           Show installed modules and tool wiring state
+#
+# Requirements:
+#   - git
+#   - yq (https://github.com/mikefarah/yq) for YAML parsing
+#     Install: brew install yq
+
+set -euo pipefail
+
+# Resolve project root: walk up from script location to find zettledeck.yml
+find_project_root() {
+    local dir
+    dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+    if [[ -f "${dir}/zettledeck.yml" ]] || [[ -f "${dir}/.zettledeck/zettledeck.yml" ]]; then
+        echo "$dir"
+    else
+        echo "$(pwd)"
+    fi
+}
+
+PROJECT_ROOT="$(find_project_root)"
+CONFIG_DIR="${PROJECT_ROOT}/.zettledeck"
+CONFIG_FILE="${CONFIG_DIR}/zettledeck.yml"
+SHARED_DIR="${PROJECT_ROOT}/.shared"
+SHARED_SKILLS="${SHARED_DIR}/skills"
+SHARED_AGENTS="${SHARED_DIR}/agents"
+SHARED_STEERING="${SHARED_DIR}/steering"
+SHARED_TEMPLATES="${SHARED_DIR}/templates"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+log_info()  { echo -e "${BLUE}[zd]${NC} $1"; }
+log_ok()    { echo -e "${GREEN}[zd]${NC} $1"; }
+log_warn()  { echo -e "${YELLOW}[zd]${NC} $1"; }
+log_error() { echo -e "${RED}[zd]${NC} $1"; }
+
+# Check dependencies
+check_deps() {
+    if ! command -v git &> /dev/null; then
+        log_error "git is required but not installed."
+        exit 1
+    fi
+    if ! command -v yq &> /dev/null; then
+        log_error "yq is required but not installed. Install with: brew install yq"
+        exit 1
+    fi
+}
+
+# Ensure config file exists
+require_config() {
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        log_error "No zettledeck.yml found at ${CONFIG_FILE}."
+        log_info "If this is a fresh project from the template, create .zettledeck/zettledeck.yml"
+        log_info "with your add-on module declarations."
+        exit 1
+    fi
+}
+
+# Ensure shared directories exist
+ensure_shared_dirs() {
+    mkdir -p "$SHARED_SKILLS" "$SHARED_AGENTS" "$SHARED_STEERING" "$SHARED_TEMPLATES"
+}
+
+# Install a single module's assets from a cloned repo into .shared/
+install_module_assets() {
+    local module_dir="$1"
+    local module_name="$2"
+    local installed=0
+
+    # Copy skills
+    if [[ -d "${module_dir}/skills" ]]; then
+        for skill_dir in "${module_dir}/skills"/*/; do
+            [[ -d "$skill_dir" ]] || continue
+            local skill_name
+            skill_name=$(basename "$skill_dir")
+            local target="${SHARED_SKILLS}/${skill_name}"
+
+            if [[ -d "$target" ]]; then
+                log_warn "  Skill '${skill_name}' already exists. Skipping (use 'zd update' to refresh)."
+                continue
+            fi
+
+            cp -R "$skill_dir" "$target"
+            log_info "  Installed skill: ${skill_name}"
+            ((installed++))
+        done
+    fi
+
+    # Copy agents
+    if [[ -d "${module_dir}/agents" ]]; then
+        for agent_file in "${module_dir}/agents"/*.md; do
+            [[ -f "$agent_file" ]] || continue
+            local agent_name
+            agent_name=$(basename "$agent_file")
+            local target="${SHARED_AGENTS}/${agent_name}"
+
+            if [[ -f "$target" ]]; then
+                log_warn "  Agent '${agent_name}' already exists. Skipping."
+                continue
+            fi
+
+            cp "$agent_file" "$target"
+            log_info "  Installed agent: ${agent_name}"
+            ((installed++))
+        done
+    fi
+
+    # Copy steering files
+    if [[ -d "${module_dir}/steering" ]]; then
+        for steering_file in "${module_dir}/steering"/*.md; do
+            [[ -f "$steering_file" ]] || continue
+            local steering_name
+            steering_name=$(basename "$steering_file")
+            local target="${SHARED_STEERING}/${steering_name}"
+
+            if [[ -f "$target" ]]; then
+                log_warn "  Steering '${steering_name}' already exists. Skipping."
+                continue
+            fi
+
+            cp "$steering_file" "$target"
+            log_info "  Installed steering: ${steering_name}"
+            ((installed++))
+        done
+    fi
+
+    # Copy templates
+    if [[ -d "${module_dir}/templates" ]]; then
+        for template_file in "${module_dir}/templates"/*; do
+            [[ -f "$template_file" ]] || continue
+            local template_name
+            template_name=$(basename "$template_file")
+            local target="${SHARED_TEMPLATES}/${template_name}"
+
+            if [[ -f "$target" ]]; then
+                log_info "  Template '${template_name}' already exists. Skipping (won't overwrite)."
+                continue
+            fi
+
+            cp "$template_file" "$target"
+            log_ok "  Installed template: ${template_name}"
+            ((installed++))
+        done
+    fi
+
+    # Copy module scripts
+    if [[ -d "${module_dir}/scripts" ]]; then
+        for script_file in "${module_dir}/scripts"/*; do
+            [[ -f "$script_file" ]] || continue
+            local script_name
+            script_name=$(basename "$script_file")
+            local target="${CONFIG_DIR}/scripts/${script_name}"
+
+            if [[ -f "$target" ]]; then
+                log_info "  Script '${script_name}' already exists. Skipping."
+                continue
+            fi
+
+            cp "$script_file" "$target"
+            chmod +x "$target"
+            log_info "  Installed script: ${script_name}"
+            ((installed++))
+        done
+    fi
+
+    echo "$installed"
+}
+
+# ─── Commands ───────────────────────────────────────────────────────────────
+
+# Install all modules from zettledeck.yml
+cmd_install() {
+    require_config
+    check_deps
+    ensure_shared_dirs
+
+    local count
+    count=$(yq '.modules | length' "$CONFIG_FILE")
+
+    if [[ "$count" -eq 0 ]]; then
+        log_info "No modules declared in zettledeck.yml."
+        return
+    fi
+
+    local tmpdir
+    tmpdir=$(mktemp -d)
+    trap "rm -rf '$tmpdir'" EXIT
+
+    for ((i=0; i<count; i++)); do
+        local name repo ref
+        name=$(yq ".modules[$i].name" "$CONFIG_FILE")
+        repo=$(yq ".modules[$i].repo" "$CONFIG_FILE")
+        ref=$(yq ".modules[$i].ref // \"main\"" "$CONFIG_FILE")
+
+        log_info "Installing ${name} from ${repo} (${ref})..."
+
+        local clone_dir="${tmpdir}/${name}"
+        git clone --depth 1 --branch "$ref" "https://${repo}.git" "$clone_dir" 2>/dev/null || {
+            log_error "Failed to clone ${repo}. Check the URL and your access."
+            continue
+        }
+
+        install_module_assets "$clone_dir" "$name"
+        log_ok "Installed ${name}."
+    done
+
+    log_ok "Module installation complete."
+    log_info "Run 'zd setup' to configure tool wiring (Claude Code / Kiro)."
+}
+
+# Update all installed modules
+cmd_update() {
+    require_config
+    check_deps
+    ensure_shared_dirs
+
+    local count
+    count=$(yq '.modules | length' "$CONFIG_FILE")
+
+    if [[ "$count" -eq 0 ]]; then
+        log_info "No modules declared in zettledeck.yml."
+        return
+    fi
+
+    local tmpdir
+    tmpdir=$(mktemp -d)
+    trap "rm -rf '$tmpdir'" EXIT
+
+    for ((i=0; i<count; i++)); do
+        local name repo ref
+        name=$(yq ".modules[$i].name" "$CONFIG_FILE")
+        repo=$(yq ".modules[$i].repo" "$CONFIG_FILE")
+        ref=$(yq ".modules[$i].ref // \"main\"" "$CONFIG_FILE")
+
+        log_info "Updating ${name} from ${repo} (${ref})..."
+
+        local clone_dir="${tmpdir}/${name}"
+        git clone --depth 1 --branch "$ref" "https://${repo}.git" "$clone_dir" 2>/dev/null || {
+            log_error "Failed to clone ${repo}. Check the URL and your access."
+            continue
+        }
+
+        # For update, overwrite existing assets
+        if [[ -d "${clone_dir}/skills" ]]; then
+            for skill_dir in "${clone_dir}/skills"/*/; do
+                [[ -d "$skill_dir" ]] || continue
+                local skill_name
+                skill_name=$(basename "$skill_dir")
+                rm -rf "${SHARED_SKILLS}/${skill_name}"
+                cp -R "$skill_dir" "${SHARED_SKILLS}/${skill_name}"
+                log_info "  Updated skill: ${skill_name}"
+            done
+        fi
+
+        if [[ -d "${clone_dir}/agents" ]]; then
+            for agent_file in "${clone_dir}/agents"/*.md; do
+                [[ -f "$agent_file" ]] || continue
+                local agent_name
+                agent_name=$(basename "$agent_file")
+                cp "$agent_file" "${SHARED_AGENTS}/${agent_name}"
+                log_info "  Updated agent: ${agent_name}"
+            done
+        fi
+
+        if [[ -d "${clone_dir}/steering" ]]; then
+            for steering_file in "${clone_dir}/steering"/*.md; do
+                [[ -f "$steering_file" ]] || continue
+                local steering_name
+                steering_name=$(basename "$steering_file")
+                cp "$steering_file" "${SHARED_STEERING}/${steering_name}"
+                log_info "  Updated steering: ${steering_name}"
+            done
+        fi
+
+        if [[ -d "${clone_dir}/templates" ]]; then
+            for template_file in "${clone_dir}/templates"/*; do
+                [[ -f "$template_file" ]] || continue
+                local template_name
+                template_name=$(basename "$template_file")
+                cp "$template_file" "${SHARED_TEMPLATES}/${template_name}"
+                log_info "  Updated template: ${template_name}"
+            done
+        fi
+
+        if [[ -d "${clone_dir}/scripts" ]]; then
+            for script_file in "${clone_dir}/scripts"/*; do
+                [[ -f "$script_file" ]] || continue
+                local script_name
+                script_name=$(basename "$script_file")
+                cp "$script_file" "${CONFIG_DIR}/scripts/${script_name}"
+                chmod +x "${CONFIG_DIR}/scripts/${script_name}"
+                log_info "  Updated script: ${script_name}"
+            done
+        fi
+
+        log_ok "Updated ${name}."
+    done
+
+    log_ok "Module update complete."
+}
+
+# ─── Tool Wiring ────────────────────────────────────────────────────────────
+
+# Generate a Kiro agent JSON file from an agent markdown file
+generate_kiro_agent_json() {
+    local agent_md="$1"
+    local agent_name
+    agent_name=$(basename "$agent_md" .md)
+
+    # Extract description from first non-empty, non-heading line
+    local description
+    description=$(grep -m1 -v '^#\|^$\|^---' "$agent_md" 2>/dev/null | head -c 200 || echo "ZettleDeck agent")
+
+    cat << JSON
+{
+  "name": "${agent_name}",
+  "description": "${description}",
+  "agentFile": "${agent_name}.md"
+}
+JSON
+}
+
+# Setup tool wiring for Claude Code and/or Kiro
+cmd_setup() {
+    ensure_shared_dirs
+
+    local claude_dir="${PROJECT_ROOT}/.claude"
+    local kiro_dir="${PROJECT_ROOT}/.kiro"
+    local wired=0
+
+    # ── Claude Code ──────────────────────────────────────────────────────
+
+    if [[ -d "$claude_dir" ]] || [[ -f "${PROJECT_ROOT}/CLAUDE.md" ]]; then
+        log_info "Detected Claude Code. Setting up wiring..."
+        mkdir -p "$claude_dir"
+
+        # Symlink skills directory
+        if [[ -L "${claude_dir}/skills" ]]; then
+            rm "${claude_dir}/skills"
+        fi
+        if [[ ! -d "${claude_dir}/skills" ]]; then
+            ln -s "../.shared/skills" "${claude_dir}/skills"
+            log_info "  Linked .claude/skills → .shared/skills"
+            ((wired++))
+        else
+            log_warn "  .claude/skills exists as a directory. Skipping symlink."
+        fi
+
+        # Symlink agents directory
+        if [[ -L "${claude_dir}/agents" ]]; then
+            rm "${claude_dir}/agents"
+        fi
+        if [[ ! -d "${claude_dir}/agents" ]]; then
+            ln -s "../.shared/agents" "${claude_dir}/agents"
+            log_info "  Linked .claude/agents → .shared/agents"
+            ((wired++))
+        else
+            log_warn "  .claude/agents exists as a directory. Skipping symlink."
+        fi
+
+        # Check CLAUDE.md for steering reference
+        if [[ -f "${PROJECT_ROOT}/CLAUDE.md" ]]; then
+            if grep -q '.shared/steering' "${PROJECT_ROOT}/CLAUDE.md" 2>/dev/null; then
+                log_info "  CLAUDE.md already references .shared/steering."
+            else
+                log_warn "  CLAUDE.md does not reference .shared/steering."
+                log_info "  Add this to CLAUDE.md: 'Load and follow all steering files in .shared/steering/'"
+            fi
+        else
+            log_warn "  No CLAUDE.md found. Create one with steering references."
+        fi
+
+        log_ok "Claude Code wiring complete."
+    fi
+
+    # ── Kiro ─────────────────────────────────────────────────────────────
+
+    if [[ -d "$kiro_dir" ]]; then
+        log_info "Detected Kiro. Setting up wiring..."
+
+        # Symlink skills directory
+        if [[ -L "${kiro_dir}/skills" ]]; then
+            rm "${kiro_dir}/skills"
+        fi
+        if [[ ! -d "${kiro_dir}/skills" ]]; then
+            ln -s "../.shared/skills" "${kiro_dir}/skills"
+            log_info "  Linked .kiro/skills → .shared/skills"
+            ((wired++))
+        else
+            log_warn "  .kiro/skills exists as a directory. Skipping symlink."
+        fi
+
+        # Symlink steering directory
+        if [[ -L "${kiro_dir}/steering" ]]; then
+            rm "${kiro_dir}/steering"
+        fi
+        if [[ ! -d "${kiro_dir}/steering" ]]; then
+            ln -s "../.shared/steering" "${kiro_dir}/steering"
+            log_info "  Linked .kiro/steering → .shared/steering"
+            ((wired++))
+        else
+            log_warn "  .kiro/steering exists as a directory. Skipping symlink."
+        fi
+
+        # Agents: individual symlinks + generated JSON
+        mkdir -p "${kiro_dir}/agents"
+        if [[ -d "$SHARED_AGENTS" ]]; then
+            for agent_file in "${SHARED_AGENTS}"/*.md; do
+                [[ -f "$agent_file" ]] || continue
+                local agent_name
+                agent_name=$(basename "$agent_file")
+                local agent_base
+                agent_base=$(basename "$agent_file" .md)
+
+                # Symlink the .md file
+                local md_target="${kiro_dir}/agents/${agent_name}"
+                if [[ -L "$md_target" ]]; then
+                    rm "$md_target"
+                fi
+                ln -s "../../.shared/agents/${agent_name}" "$md_target"
+                log_info "  Linked agent: ${agent_name}"
+
+                # Generate the .json companion
+                local json_target="${kiro_dir}/agents/${agent_base}.json"
+                if [[ ! -f "$json_target" ]]; then
+                    generate_kiro_agent_json "$agent_file" > "$json_target"
+                    log_info "  Generated: ${agent_base}.json"
+                fi
+
+                ((wired++))
+            done
+        fi
+
+        log_ok "Kiro wiring complete."
+    fi
+
+    if [[ "$wired" -eq 0 ]]; then
+        log_info "No tool directories detected (.claude/ or .kiro/)."
+        log_info "Create .claude/ or .kiro/ first, then re-run 'zd setup'."
+    else
+        log_ok "Tool wiring complete. ${wired} items wired."
+    fi
+}
+
+# ─── Status ─────────────────────────────────────────────────────────────────
+
+cmd_status() {
+    echo ""
+    log_info "ZettleDeck Status"
+    echo ""
+
+    # Config
+    if [[ -f "$CONFIG_FILE" ]]; then
+        local count
+        count=$(yq '.modules | length' "$CONFIG_FILE" 2>/dev/null || echo "0")
+        log_info "Config: ${CONFIG_FILE} (${count} modules declared)"
+    else
+        log_warn "Config: No zettledeck.yml found"
+    fi
+
+    # Installed skills
+    echo ""
+    log_info "Skills (.shared/skills/):"
+    if [[ -d "$SHARED_SKILLS" ]]; then
+        for skill_dir in "${SHARED_SKILLS}"/*/; do
+            [[ -d "$skill_dir" ]] || continue
+            echo -e "  ${GREEN}$(basename "$skill_dir")${NC}"
+        done
+    else
+        echo "  (none)"
+    fi
+
+    # Installed agents
+    echo ""
+    log_info "Agents (.shared/agents/):"
+    if [[ -d "$SHARED_AGENTS" ]]; then
+        local found_agents=0
+        for agent_file in "${SHARED_AGENTS}"/*.md; do
+            [[ -f "$agent_file" ]] || continue
+            echo -e "  ${GREEN}$(basename "$agent_file")${NC}"
+            found_agents=1
+        done
+        [[ "$found_agents" -eq 0 ]] && echo "  (none)"
+    else
+        echo "  (none)"
+    fi
+
+    # Installed steering
+    echo ""
+    log_info "Steering (.shared/steering/):"
+    if [[ -d "$SHARED_STEERING" ]]; then
+        local found_steering=0
+        for steering_file in "${SHARED_STEERING}"/*.md; do
+            [[ -f "$steering_file" ]] || continue
+            echo -e "  ${GREEN}$(basename "$steering_file")${NC}"
+            found_steering=1
+        done
+        [[ "$found_steering" -eq 0 ]] && echo "  (none)"
+    else
+        echo "  (none)"
+    fi
+
+    # Tool wiring
+    echo ""
+    log_info "Tool Wiring:"
+
+    local claude_dir="${PROJECT_ROOT}/.claude"
+    local kiro_dir="${PROJECT_ROOT}/.kiro"
+
+    if [[ -d "$claude_dir" ]]; then
+        echo -e "  Claude Code:"
+        [[ -L "${claude_dir}/skills" ]] && echo -e "    skills: ${GREEN}linked${NC}" || echo -e "    skills: ${YELLOW}not linked${NC}"
+        [[ -L "${claude_dir}/agents" ]] && echo -e "    agents: ${GREEN}linked${NC}" || echo -e "    agents: ${YELLOW}not linked${NC}"
+        if [[ -f "${PROJECT_ROOT}/CLAUDE.md" ]] && grep -q '.shared/steering' "${PROJECT_ROOT}/CLAUDE.md" 2>/dev/null; then
+            echo -e "    steering: ${GREEN}referenced in CLAUDE.md${NC}"
+        else
+            echo -e "    steering: ${YELLOW}not referenced in CLAUDE.md${NC}"
+        fi
+    else
+        echo -e "  Claude Code: ${YELLOW}not detected${NC}"
+    fi
+
+    if [[ -d "$kiro_dir" ]]; then
+        echo -e "  Kiro:"
+        [[ -L "${kiro_dir}/skills" ]] && echo -e "    skills: ${GREEN}linked${NC}" || echo -e "    skills: ${YELLOW}not linked${NC}"
+        [[ -L "${kiro_dir}/steering" ]] && echo -e "    steering: ${GREEN}linked${NC}" || echo -e "    steering: ${YELLOW}not linked${NC}"
+        local kiro_agent_count=0
+        for f in "${kiro_dir}/agents"/*.md; do
+            [[ -L "$f" ]] && ((kiro_agent_count++))
+        done
+        echo -e "    agents: ${GREEN}${kiro_agent_count} linked${NC}"
+    else
+        echo -e "  Kiro: ${YELLOW}not detected${NC}"
+    fi
+
+    echo ""
+}
+
+# ─── Main Dispatch ──────────────────────────────────────────────────────────
+
+case "${1:-help}" in
+    install) cmd_install ;;
+    update)  cmd_update ;;
+    setup)   cmd_setup ;;
+    status)  cmd_status ;;
+    help|--help|-h)
+        echo "Usage: zd <command>"
+        echo ""
+        echo "Commands:"
+        echo "  install   Install add-on modules from zettledeck.yml"
+        echo "  update    Update installed modules to latest"
+        echo "  setup     Create tool wiring (Claude Code / Kiro symlinks)"
+        echo "  status    Show installed modules and wiring status"
+        echo ""
+        ;;
+    *)
+        log_error "Unknown command: $1"
+        echo "Run 'zd help' for usage."
+        exit 1
+        ;;
+esac
