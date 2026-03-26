@@ -20,6 +20,9 @@ ZettleDeck organizes knowledge using a hierarchical vault structure with consist
 git clone https://github.com/strye/zettledeck-core.git my-vault
 cd my-vault
 
+# 1.3 OPTIONAL Remove the `.git` folder and revision history
+# rm -rf .git
+
 # 2. Wire up your AI tool so core skills are visible
 #    (Create `.claude` and/or `.kiro` folder(s) first)
 .zettledeck/scripts/zd setup
