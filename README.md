@@ -20,13 +20,20 @@ ZettleDeck organizes knowledge using a hierarchical vault structure with consist
 git clone https://github.com/strye/zettledeck-core.git my-vault
 cd my-vault
 
-# 2. (Optional) Add add-on modules to .zettledeck/zettledeck.yml, then:
-.zettledeck/scripts/zd install
-
-# 3. Wire up your AI tool (Based on folder structure. Create `.claude` and/or `.kiro` foler(s) - Re-run after adding modules)
+# 2. Wire up your AI tool so core skills are visible
+#    (Create `.claude` and/or `.kiro` folder(s) first)
 .zettledeck/scripts/zd setup
 
-# 4. Run interactive setup (in Claude Code or Kiro)
+# 3. Run core init (in Claude Code or Kiro) — configures vault identity,
+#    folder structure, task paths. Modules need this context.
+/zettledeck.init core
+
+# 4. Add add-on modules to .zettledeck/zettledeck.yml, then install them
+#    (automatically wires any new agents — no need to re-run zd setup)
+.zettledeck/scripts/zd install
+
+# 5. Run module init (in Claude Code or Kiro) — discovers and configures
+#    module-specific settings now that their init-steps are available
 /zettledeck.init
 ```
 
@@ -80,11 +87,13 @@ zd status    # Show installed modules and wiring status
 2. Clones each module to a temp directory
 3. Copies assets into `.shared/` (skills, agents, steering, templates)
 4. Copies module scripts into `.zettledeck/scripts/`
-5. Cleans up temp files
+5. Marks each module as `pending` in `.zettledeck/init-state.yml`
+6. Auto-wires any new Kiro agents (symlinks + JSON companions)
+7. Cleans up temp files
 
 ### What `zd setup` Does
 
-Detects which AI tools are present and creates the appropriate wiring:
+One-time wiring that connects AI tools to `.shared/`. Run once after cloning; `zd install` handles subsequent agent wiring automatically.
 
 - **Claude Code**: symlinks `.claude/skills` and `.claude/agents` to `.shared/`, checks `CLAUDE.md` for steering references
 - **Kiro**: symlinks `.kiro/skills` and `.kiro/steering` to `.shared/`, creates individual agent symlinks with companion JSON files

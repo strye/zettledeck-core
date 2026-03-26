@@ -32,6 +32,7 @@ find_project_root() {
 PROJECT_ROOT="$(find_project_root)"
 CONFIG_DIR="${PROJECT_ROOT}/.zettledeck"
 CONFIG_FILE="${CONFIG_DIR}/zettledeck.yml"
+INIT_STATE_FILE="${CONFIG_DIR}/init-state.yml"
 SHARED_DIR="${PROJECT_ROOT}/.shared"
 SHARED_SKILLS="${SHARED_DIR}/skills"
 SHARED_AGENTS="${SHARED_DIR}/agents"
@@ -75,6 +76,46 @@ require_config() {
 # Ensure shared directories exist
 ensure_shared_dirs() {
     mkdir -p "$SHARED_SKILLS" "$SHARED_AGENTS" "$SHARED_STEERING" "$SHARED_TEMPLATES"
+}
+
+# ─── Init State Management ─────────────────────────────────────────────────
+
+# Ensure init-state.yml exists with base structure
+ensure_init_state() {
+    if [[ ! -f "$INIT_STATE_FILE" ]]; then
+        cat > "$INIT_STATE_FILE" << 'EOF'
+initialized: {}
+pending: []
+EOF
+        log_info "Created init-state.yml"
+    fi
+}
+
+# Record a module as installed (pending init) in init-state.yml
+# Only adds to pending if not already initialized or pending
+mark_module_installed() {
+    local module_name="$1"
+
+    ensure_init_state
+
+    # Check if already initialized
+    local is_initialized
+    is_initialized=$(yq ".initialized.\"${module_name}\" // \"\"" "$INIT_STATE_FILE")
+    if [[ -n "$is_initialized" && "$is_initialized" != "null" ]]; then
+        log_info "  ${module_name} already initialized — skipping state update."
+        return
+    fi
+
+    # Check if already pending
+    local is_pending
+    is_pending=$(yq ".pending[] | select(. == \"${module_name}\")" "$INIT_STATE_FILE")
+    if [[ -n "$is_pending" ]]; then
+        return
+    fi
+
+    # Add to pending
+    yq -i ".pending += [\"${module_name}\"]" "$INIT_STATE_FILE"
+    log_info "  Marked ${module_name} as pending init."
 }
 
 # Install a single module's assets from a cloned repo into .shared/
@@ -217,11 +258,17 @@ cmd_install() {
         }
 
         install_module_assets "$clone_dir" "$name"
+        mark_module_installed "$name"
         log_ok "Installed ${name}."
     done
 
     log_ok "Module installation complete."
-    log_info "Run 'zd setup' to configure tool wiring (Claude Code / Kiro)."
+
+    # Auto-wire any new agents for Kiro (skills/steering use directory symlinks
+    # so they're already visible — only agents need per-file wiring)
+    wire_kiro_agents || true
+
+    log_info "Run '/zettledeck.init' to configure module-specific settings."
 }
 
 # Update all installed modules
@@ -313,6 +360,11 @@ cmd_update() {
     done
 
     log_ok "Module update complete."
+
+    # Re-wire agents in case modules added or changed agent files
+    wire_kiro_agents || true
+
+    log_info "Run '/zettledeck.init' if updated modules have new init steps."
 }
 
 # ─── Tool Wiring ────────────────────────────────────────────────────────────
@@ -334,6 +386,45 @@ generate_kiro_agent_json() {
   "agentFile": "${agent_name}.md"
 }
 JSON
+}
+
+# Wire Kiro agent symlinks + JSON companions for any agents in .shared/agents/
+# Called by cmd_setup and automatically after cmd_install/cmd_update
+wire_kiro_agents() {
+    local kiro_dir="${PROJECT_ROOT}/.kiro"
+    local wired=0
+
+    [[ -d "$kiro_dir" ]] || return 0
+    [[ -d "$SHARED_AGENTS" ]] || return 0
+
+    mkdir -p "${kiro_dir}/agents"
+
+    for agent_file in "${SHARED_AGENTS}"/*.md; do
+        [[ -f "$agent_file" ]] || continue
+        local agent_name
+        agent_name=$(basename "$agent_file")
+        local agent_base
+        agent_base=$(basename "$agent_file" .md)
+
+        # Symlink the .md file
+        local md_target="${kiro_dir}/agents/${agent_name}"
+        if [[ -L "$md_target" ]]; then
+            rm "$md_target"
+        fi
+        ln -s "../../.shared/agents/${agent_name}" "$md_target"
+        log_info "  Linked agent: ${agent_name}"
+
+        # Generate the .json companion
+        local json_target="${kiro_dir}/agents/${agent_base}.json"
+        if [[ ! -f "$json_target" ]]; then
+            generate_kiro_agent_json "$agent_file" > "$json_target"
+            log_info "  Generated: ${agent_base}.json"
+        fi
+
+        ((wired++))
+    done
+
+    return "$wired"
 }
 
 # Setup tool wiring for Claude Code and/or Kiro
@@ -418,34 +509,8 @@ cmd_setup() {
             log_warn "  .kiro/steering exists as a directory. Skipping symlink."
         fi
 
-        # Agents: individual symlinks + generated JSON
-        mkdir -p "${kiro_dir}/agents"
-        if [[ -d "$SHARED_AGENTS" ]]; then
-            for agent_file in "${SHARED_AGENTS}"/*.md; do
-                [[ -f "$agent_file" ]] || continue
-                local agent_name
-                agent_name=$(basename "$agent_file")
-                local agent_base
-                agent_base=$(basename "$agent_file" .md)
-
-                # Symlink the .md file
-                local md_target="${kiro_dir}/agents/${agent_name}"
-                if [[ -L "$md_target" ]]; then
-                    rm "$md_target"
-                fi
-                ln -s "../../.shared/agents/${agent_name}" "$md_target"
-                log_info "  Linked agent: ${agent_name}"
-
-                # Generate the .json companion
-                local json_target="${kiro_dir}/agents/${agent_base}.json"
-                if [[ ! -f "$json_target" ]]; then
-                    generate_kiro_agent_json "$agent_file" > "$json_target"
-                    log_info "  Generated: ${agent_base}.json"
-                fi
-
-                ((wired++))
-            done
-        fi
+        # Wire agent symlinks + JSON
+        wire_kiro_agents || wired=$((wired + $?))
 
         log_ok "Kiro wiring complete."
     fi
@@ -514,6 +579,41 @@ cmd_status() {
         [[ "$found_steering" -eq 0 ]] && echo "  (none)"
     else
         echo "  (none)"
+    fi
+
+    # Init state
+    echo ""
+    log_info "Init State:"
+    if [[ -f "$INIT_STATE_FILE" ]]; then
+        # Show initialized modules
+        local init_keys
+        init_keys=$(yq '.initialized | keys | .[]' "$INIT_STATE_FILE" 2>/dev/null)
+        if [[ -n "$init_keys" ]]; then
+            echo -e "  Initialized:"
+            while IFS= read -r key; do
+                local date_val
+                date_val=$(yq ".initialized.\"${key}\".date // .initialized.\"${key}\"" "$INIT_STATE_FILE" 2>/dev/null)
+                echo -e "    ${GREEN}${key}${NC} (${date_val})"
+            done <<< "$init_keys"
+        else
+            echo -e "  Initialized: ${YELLOW}(none)${NC}"
+        fi
+
+        # Show pending modules
+        local pending_count
+        pending_count=$(yq '.pending | length' "$INIT_STATE_FILE" 2>/dev/null || echo "0")
+        if [[ "$pending_count" -gt 0 ]]; then
+            echo -e "  Pending init:"
+            for ((p=0; p<pending_count; p++)); do
+                local pname
+                pname=$(yq ".pending[$p]" "$INIT_STATE_FILE")
+                echo -e "    ${YELLOW}${pname}${NC}"
+            done
+            echo ""
+            log_info "Run '/zettledeck.init' to configure pending modules."
+        fi
+    else
+        echo -e "  ${YELLOW}No init-state.yml found. Run 'zd install' or '/zettledeck.init' to create it.${NC}"
     fi
 
     # Tool wiring
