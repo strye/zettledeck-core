@@ -20,14 +20,14 @@ ZettleDeck organizes knowledge using a hierarchical vault structure with consist
 git clone https://github.com/strye/zettledeck-core.git my-vault
 cd my-vault
 
-# 2. Run interactive setup (in Claude Code or Kiro)
-/zettledeck.init
-
-# 3. (Optional) Add add-on modules to .zettledeck/zettledeck.yml, then:
+# 2. (Optional) Add add-on modules to .zettledeck/zettledeck.yml, then:
 .zettledeck/scripts/zd install
 
-# 4. Wire up your AI tool
+# 3. Wire up your AI tool (Based on folder structure. Create `.claude` and/or `.kiro` foler(s) - Re-run after adding modules)
 .zettledeck/scripts/zd setup
+
+# 4. Run interactive setup (in Claude Code or Kiro)
+/zettledeck.init
 ```
 
 ## Project Structure

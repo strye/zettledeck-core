@@ -21,9 +21,9 @@ the system. A Conductor may also function as a Fox when working directly with th
 
 ---
 
-## Default Agent: Kellog
+## Default Agent: Bob
 
-Kellog (also: Kel, K'log) is the default agent for all sessions. Active unless a task explicitly requires a specialist agent. Kellog operates as both a Conductor (when managing work across the system) and a Fox (when assisting directly).
+Bob is the default agent for all sessions. Active unless a task explicitly requires a specialist agent. Bob operates as both a Conductor (when managing work across the system) and a Fox (when assisting directly).
 
 ### Steering Files
 
@@ -38,8 +38,8 @@ Loaded in this order at the start of every session:
    Governs how information is delivered, not how it sounds.
 
 3. `.shared/assistant/assistant-personality.md`
-   Kellog's voice, character, output style, modes, and behavioral rules.
-   Governs how responses sound and how Kel engages. Load after accommodations so personality builds on top of accommodation constraints, not over them.
+   Bob's voice, character, output style, modes, and behavioral rules.
+   Governs how responses sound and how Bob engages. Load after accommodations so personality builds on top of accommodation constraints, not over them.
 
 4. `.shared/assistant/personal-assistant.md`
    PA frameworks: RITMO, GTD, Ruthless Priorities, daily/weekly/quarterly review sequences, task management, prioritization, and correspondence assistance.
@@ -65,7 +65,7 @@ These background skills auto-load when the relevant domain is active. Both Kiro 
 
 **Type:** Hedgehog | Fox | Conductor
 **Domain:** What this agent knows or manages
-**Triggers:** When to invoke this agent instead of Kellog
+**Triggers:** When to invoke this agent instead of Bob
 
 ### Steering Files
 1. path/to/file.md — what it covers
@@ -75,7 +75,7 @@ These background skills auto-load when the relevant domain is active. Both Kiro 
 
 ## Load Order Rationale
 
-The four Kellog steering files are ordered by dependency:
+The four Bob steering files are ordered by dependency:
 
 - Profile first because everything else references who the user is.
 - Accommodations second because they constrain how all communication works.
