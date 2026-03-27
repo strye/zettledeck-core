@@ -8,6 +8,19 @@ description: Core vault structure, task management paths, and vault steering cus
 
 Walk the user through configuring the foundational ZettleDeck settings. This covers vault identity, document organization, task management paths, and the vault steering template.
 
+## Module Configuration Convention
+
+All ZettleDeck module configuration lives in `.zettledeck/{module-name}/config.json`. Each module owns its own config file alongside its `init-steps.md`. This convention:
+
+- Keeps config co-located with the module that owns it
+- Avoids scattering settings across CLAUDE.md or loose config files
+- Makes it clear which module a setting belongs to
+- Allows `zd install` to scaffold the config file from init-steps
+
+**Config file location pattern:** `.zettledeck/{module-name}/config.json`
+
+**Skills read config at runtime** from the appropriate module's config file. The CLAUDE.md file contains a summary table pointing to each module's config but does not duplicate the values.
+
 ---
 
 ## 1. Vault Identity

@@ -1,6 +1,6 @@
 ---
 name: obsidian
-description: Interact with the Obsidian vault using the obsidian CLI — read, search, create, move, manage tags/links/tasks, and inspect metadata. Works across all modes: notes, search, tasks, properties, and links.
+description: Interact with the Obsidian vault using the obsidian CLI — read, search, create, move, manage tags/links/tasks, and inspect metadata. Works across all modes- notes, search, tasks, properties, and links.
 ---
 
 # Obsidian — CLI Vault Operations
@@ -37,7 +37,7 @@ Call this skill when the user requests:
 
 **Tools needed**: Bash (for CLI), Read, Write, Glob
 
-**Vault path**: The workspace root directory is assumed to be the vault root. If your vault is at a different location, set `vault.path` in your project configuration or CLAUDE.md.
+**Vault path**: If your vault is at a different location from the workspace root, set `vaultPath` in `.zettledeck/zettledeck-nexus/config.json`.
 
 ---
 

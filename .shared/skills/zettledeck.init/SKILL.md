@@ -23,9 +23,9 @@ Interactive setup skill that walks users through customizing their ZettleDeck pr
 The skill discovers available init modules by scanning for resource files in two locations:
 
 1. **This skill's resources/** — ships with core, always available
-2. **`.shared/skills/*/init-steps.md`** — contributed by installed add-on modules
+2. **`.zettledeck/*/init-steps.md`** — contributed by installed add-on modules (each module gets its own directory under `.zettledeck/`)
 
-Each resource file defines the init steps for one module. When a module is installed via `zd install`, its skills (including init-steps) are copied into `.shared/skills/`.
+Each resource file defines the init steps for one module. When a module is installed via `zd install`, its root-level `init-steps.md` is copied into `.zettledeck/{module-name}/init-steps.md`.
 
 ### Interaction Model
 
@@ -95,7 +95,22 @@ After all steps complete, provide a summary:
 
 ## Extending This Skill (For Module Authors)
 
-To add init steps for your module, include an `init-steps.md` file in your module's root directory. The file should follow this structure:
+To add init steps for your module, include an `init-steps.md` file in your module repository's root directory. The `zd install` command will copy it to `.zettledeck/{module-name}/init-steps.md`.
+
+### Module Configuration Convention
+
+Each module that needs runtime configuration should write a `config.json` file in its `.zettledeck/{module-name}/` directory. Init-steps should:
+
+1. Document the config file format with all keys and defaults
+2. Walk the user through each config key
+3. Write the final `config.json` after all questions are answered
+4. Update skill files that reference the config path
+
+Skills read their config at runtime from `.zettledeck/{module-name}/config.json`. This keeps configuration co-located with the module that owns it.
+
+### Init-steps file structure
+
+The file should follow this structure:
 
 ```markdown
 ---
@@ -104,9 +119,22 @@ order: 20
 description: One-line description of what this configures
 ---
 
+## Configuration Convention
+
+All {module} configuration is stored in `.zettledeck/{module-name}/config.json`.
+
+### Config file format
+
+**File:** `.zettledeck/{module-name}/config.json`
+
+(show JSON template with all keys and defaults)
+
+---
+
 ## Section Title
 
 **What:** Explanation of what's being configured
+**Config key:** `keyName`
 **File:** path/to/file/being/modified (relative to project root)
 **Marker:** The placeholder text or CUSTOMIZE marker to find
 **Default:** A sensible default value
@@ -124,7 +152,7 @@ Instructions for what to write and where.
 
 **Order field:** Controls the sequence when running all modules. Core is `10`, use `20+` for add-on modules.
 
-**Discovery:** When a module is installed via `zd install`, its skills are copied into `.shared/skills/`. If the module includes an `init-steps.md` in its skill directory, the init skill discovers it automatically.
+**Discovery:** When a module is installed via `zd install`, its root-level `init-steps.md` is copied into `.zettledeck/{module-name}/init-steps.md`. The init skill discovers it automatically by scanning `.zettledeck/*/init-steps.md`.
 
 ---
 

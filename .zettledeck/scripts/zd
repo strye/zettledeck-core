@@ -202,7 +202,8 @@ install_module_assets() {
 
     # Scaffold project-root directories (non-destructive)
     if [[ -d "${module_dir}/scaffolding" ]]; then
-        while IFS= read -r -d '' rel_path; do
+        while IFS= read -r -d '' raw_path; do
+            local rel_path="${raw_path#./}"
             local target="${PROJECT_ROOT}/${rel_path}"
             if [[ -d "${module_dir}/scaffolding/${rel_path}" ]]; then
                 if [[ ! -d "$target" ]]; then
@@ -219,7 +220,7 @@ install_module_assets() {
                     log_info "  Scaffold file '${rel_path}' already exists. Skipping."
                 fi
             fi
-        done < <(cd "${module_dir}/scaffolding" && find . -mindepth 1 \( -type f -o -type d \) -print0 | sed -z 's|^\./||')
+        done < <(cd "${module_dir}/scaffolding" && find . -mindepth 1 \( -type f -o -type d \) -print0)
     fi
 
     # Copy module scripts
@@ -380,7 +381,8 @@ cmd_update() {
 
         # Scaffold project-root directories (non-destructive — never overwrite user content)
         if [[ -d "${clone_dir}/scaffolding" ]]; then
-            while IFS= read -r -d '' rel_path; do
+            while IFS= read -r -d '' raw_path; do
+                local rel_path="${raw_path#./}"
                 local target="${PROJECT_ROOT}/${rel_path}"
                 if [[ -d "${clone_dir}/scaffolding/${rel_path}" ]]; then
                     if [[ ! -d "$target" ]]; then
@@ -394,7 +396,7 @@ cmd_update() {
                         log_info "  Scaffolded file: ${rel_path}"
                     fi
                 fi
-            done < <(cd "${clone_dir}/scaffolding" && find . -mindepth 1 \( -type f -o -type d \) -print0 | sed -z 's|^\./||')
+            done < <(cd "${clone_dir}/scaffolding" && find . -mindepth 1 \( -type f -o -type d \) -print0)
         fi
 
         log_ok "Updated ${name}."

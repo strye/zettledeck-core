@@ -115,6 +115,7 @@ modules:
 
 - `git`
 - `yq` — install with `brew install yq`
+- **Windows**: requires WSL (Windows Subsystem for Linux). The `zd` script uses bash and symlinks, which are not natively supported on Windows outside of WSL.
 
 ## Skills
 

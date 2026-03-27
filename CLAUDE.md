@@ -2,6 +2,15 @@
 
 Personal productivity workspace for an Amazon Solutions Architect. This is not a code repository — it's a structured markdown system for daily planning, task management, email triage, and strategic prioritization, orchestrated through AI assistant prompts and Obsidian.md.
 
+## Module Configuration
+
+<!-- CUSTOMIZE: This table is populated by /zettledeck.init as modules are configured. -->
+
+Runtime configuration for installed ZettleDeck modules lives in `.zettledeck/{module}/config.json`. Each module owns its own config file. See `.zettledeck/init-state.yml` for initialization status.
+
+| Module | Config | What it configures |
+|--------|--------|--------------------|
+
 ## Project Structure
 
 ```
