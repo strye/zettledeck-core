@@ -12,7 +12,7 @@ Interactive setup skill that walks users through customizing their ZettleDeck pr
 ```
 /zettledeck.init              → Run all available init steps (core + any installed modules)
 /zettledeck.init core         → Core setup only (vault structure, task paths)
-/zettledeck.init <module>     → Module-specific setup (e.g., almanac, nexus, foundry)
+/zettledeck.init <module>     → Module-specific setup (e.g., praxis, nexus, foundry)
 /zettledeck.init status       → Show what's been configured and what still needs setup
 ```
 
@@ -46,7 +46,7 @@ After initialization, write a `.zettledeck/init-state.yml` file to track what's 
 ```yaml
 initialized:
   core: 2026-03-22
-  almanac: 2026-03-22
+  praxis: 2026-03-22
 pending:
   - nexus
 ```
@@ -64,7 +64,7 @@ Before starting any module init:
 1. Check that `.zettledeck/zettledeck.yml` exists
 2. Read `.zettledeck/init-state.yml` if it exists to know what's already configured
 3. If no module argument given, discover all available modules and present them:
-   - "I found init steps for: **core**, **almanac**, **nexus**. Run all, or pick one?"
+   - "I found init steps for: **core**, **praxis**, **nexus**. Run all, or pick one?"
 
 ### Step 1 — Determine which module(s) to configure
 
@@ -89,7 +89,7 @@ For each module being initialized:
 After all steps complete, provide a summary:
 - What was configured
 - Any steps that were skipped
-- Suggested next actions (e.g., "Run `/zettledeck.init almanac` to set up your diary paths")
+- Suggested next actions (e.g., "Run `/zettledeck.init praxis` to set up your diary paths")
 
 ---
 

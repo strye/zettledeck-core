@@ -46,9 +46,8 @@ cd my-vault
 my-vault/
 ├── .shared/                        # Shared assets (hidden from Obsidian)
 │   ├── skills/
-│   │   ├── markdown.conventions/   # Reference — vault markdown rules
-│   │   ├── task.management/        # Reference — task format and archival
-│   │   ├── obsidian.vault/         # Invocable — CLI vault operations
+│   │   ├── markdown/               # Reference — markdown conventions + task format
+│   │   ├── obsidian/         # Invocable — CLI vault operations
 │   │   │   └── resources/
 │   │   │       ├── vault-steering.md   # Structural rules (static)
 │   │   │       └── vault-defaults.md   # Customizable config
@@ -107,8 +106,8 @@ Edit `.zettledeck/zettledeck.yml`:
 
 ```yaml
 modules:
-  - name: zettledeck-almanac
-    repo: github.com/strye/zettledeck-almanac
+  - name: zettledeck-praxis
+    repo: github.com/strye/zettledeck-praxis
     ref: main
 ```
 
@@ -119,28 +118,20 @@ modules:
 
 ## Skills
 
-### markdown.conventions (reference)
+### markdown (reference)
 
-Loaded automatically when working with markdown files. Defines:
+Loaded automatically when working with markdown files or tasks. Defines:
 - Obsidian compatibility (wikilinks, CommonMark)
 - Frontmatter structure and preservation rules
 - Status value lifecycle
 - Editing practices
-
-### task.management (reference)
-
-Loaded automatically when creating or modifying tasks. Defines:
-- Obsidian Tasks emoji signifiers (➕ 📅 ⏳ 🛫 ✅ ❌)
-- Priority signifiers (⏫ 🔼 🔽)
-- Attribution patterns for meeting and email sources
-- Waiting-for item format
-- Archival conventions (14-day threshold)
+- Task format rules (Obsidian Tasks emoji signifiers, priority markers, attribution patterns, waiting-for format, RP alignment tags)
 
 Archive and inbox paths are project-specific. Configure during `/zettledeck.init core`.
 
-### obsidian.vault (invocable)
+### obsidian (invocable)
 
-Full CLI interface to the Obsidian vault. Invoke with `/obsidian.vault [mode]`.
+Full CLI interface to the Obsidian vault. Invoke with `/obsidian [mode]`.
 
 **Modes:** `search`, `read`, `create`, `append`, `prepend`, `move`, `rename`, `delete`, `open`, `tags`, `links`, `backlinks`, `orphans`, `deadends`, `unresolved`, `tasks`, `properties`, `files`, `folders`, `outline`, `recents`, `vault`, `eval`
 
@@ -161,7 +152,7 @@ Covers: vault identity, folder structure, document types, task paths, naming con
 
 ## Vault Steering
 
-Split into two files inside the `obsidian.vault` skill:
+Split into two files inside the `obsidian` skill:
 
 - `resources/vault-steering.md` — the structural engine (addressing, front-matter spec, tag rules, validation). Stays static.
 - `resources/vault-defaults.md` — customizable document types, folder structure, naming conventions. Personalized during `/zettledeck.init core`.
@@ -176,7 +167,7 @@ The defaults file includes `<!-- CUSTOMIZE -->` comments at the sections to modi
 | Module | Purpose | Repo |
 |--------|---------|------|
 | **zettledeck-core** | Foundation — conventions, vault skill, compose tool | (this repo) |
-| **zettledeck-almanac** | Personal organizer — diary, email, priorities | Coming soon |
+| **zettledeck-praxis** | Daily practice — diary, email, comms, priorities | Coming soon |
 | **zettledeck-nexus** | Knowledge intelligence — vault analysis, ideas, reflection | Coming soon |
 | **zettledeck-foundry** | Content creation — research, composition, versioning | Coming soon |
 | **rostrum-blackboard** | Human-conducted blackboard orchestration | Coming soon |

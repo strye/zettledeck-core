@@ -13,7 +13,7 @@ Call this skill when the user:
 
 - Asks "what is a [ZettleDeck concept]?"
 - Asks "how do I [vault operation]?"
-- Asks about a workspace folder by name (Atelier, Chrysalis, Almanac, Foundry, Nexus, Reliquary, Scriptorium, Tesseract)
+- Asks about a workspace folder by name (Atelier, Chrysalis, Praxis, Foundry, Nexus, Reliquary, Scriptorium, Tesseract)
 - Asks why the system is structured the way it is
 - Seems confused about vault structure, document types, or naming
 - Wants a reminder about conventions (prefixes, status values, tags)
@@ -36,17 +36,16 @@ When answering questions, draw from these files (read them as needed):
 | Topic | Source |
 |-------|--------|
 | System philosophy and workspace flow | `zettledeck.help/resources/the-way.md` |
-| Document types, prefixes, subTypes | `obsidian.vault/resources/vault-defaults.md` |
-| Hierarchical addressing (zettldex) | `obsidian.vault/resources/vault-steering.md` Section 4 |
-| Front-matter specification | `obsidian.vault/resources/vault-steering.md` Section 3 |
-| Tag rules | `obsidian.vault/resources/vault-steering.md` Section 5 |
-| Status values and lifecycle | `obsidian.vault/resources/vault-steering.md` Section 7 |
-| Placement and folder rules | `obsidian.vault/resources/vault-steering.md` Section 6, `vault-defaults.md` Section 4 |
-| Validation rules | `obsidian.vault/resources/vault-steering.md` Section 9 |
-| File naming conventions | `obsidian.vault/resources/vault-defaults.md` Section 5 |
-| Vault CLI operations | `obsidian.vault/SKILL.md` |
-| Task management | `task.management/rules.md` |
-| Markdown conventions | `markdown.conventions/rules.md` |
+| Document types, prefixes, subTypes | `obsidian/resources/vault-defaults.md` |
+| Hierarchical addressing (zettldex) | `obsidian/resources/vault-steering.md` Section 4 |
+| Front-matter specification | `obsidian/resources/vault-steering.md` Section 3 |
+| Tag rules | `obsidian/resources/vault-steering.md` Section 5 |
+| Status values and lifecycle | `obsidian/resources/vault-steering.md` Section 7 |
+| Placement and folder rules | `obsidian/resources/vault-steering.md` Section 6, `vault-defaults.md` Section 4 |
+| Validation rules | `obsidian/resources/vault-steering.md` Section 9 |
+| File naming conventions | `obsidian/resources/vault-defaults.md` Section 5 |
+| Vault CLI operations | `obsidian/SKILL.md` |
+| Markdown and task format | `markdown/rules.md`, `markdown/task-format.md` |
 | Project setup and init | `zettledeck.init/SKILL.md` and `zettledeck.init/resources/core.md` |
 | Module installation | Project `README.md` |
 
@@ -144,13 +143,13 @@ When users ask "why is it set up this way?" or "what are these folders for?", re
 - ZettleDeck follows a deliberate flow: raw capture → incubation → purposeful work → permanent storage
 - Each workspace has a specific role in that flow (Atelier captures, Chrysalis incubates, Foundry crafts, etc.)
 - The Nexus is unique — it looks inward at what's already in the vault rather than creating new content
-- The Almanac is the operational backbone (tasks, diary, priorities) that runs underneath everything
+- The Praxis is the operational backbone (tasks, diary, priorities) that runs underneath everything
 - Ideas don't have to justify themselves at capture time — that's what incubation is for
 
 Common questions:
 - "What's the Atelier?" → Raw capture space. Zero friction, no format requirements. Get ideas down before they disappear.
 - "What's the Chrysalis?" → Incubation space. Ideas that showed promise sit here while they develop. Review periodically to promote, merge, or discard.
-- "What's the Almanac?" → Operational backbone. Diary, task management, ruthless priorities.
+- "What's the Praxis?" → Operational backbone. Diary, task management, ruthless priorities.
 - "What's the Foundry?" → Content workshop. Ideas get shaped into finished artifacts with full metadata and structure.
 - "What's the Nexus?" → Vault intelligence. Looks inward at what's accumulated — surfaces patterns, contradictions, and cross-domain connections.
 - "What's the Reliquary?" → Permanent storage. The long-term home for finished, structured knowledge.

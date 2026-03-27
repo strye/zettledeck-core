@@ -36,7 +36,7 @@ Add or update the vault configuration section in the project's CLAUDE.md:
 - **Vault path:** {project root or custom path}
 ```
 
-Also update `obsidian.vault` skill's vault path reference if a custom path was given.
+Also update `obsidian` skill's vault path reference if a custom path was given.
 
 ---
 
@@ -44,7 +44,7 @@ Also update `obsidian.vault` skill's vault path reference if a custom path was g
 
 **What:** Define the vault's top-level organizational folders. These determine where scopes are placed.
 
-**File:** `obsidian.vault/resources/vault-defaults.md` — Section 2 (Top-Level Folder Structure)
+**File:** `obsidian/resources/vault-defaults.md` — Section 2 (Top-Level Folder Structure)
 
 **Show the user** the current template defaults:
 
@@ -75,7 +75,7 @@ Replace the table in Section 2 of `vault-defaults.md` with the user's choices. A
 
 **What:** Define what kinds of scopes live in each top-level folder. These drive document categorization.
 
-**File:** `obsidian.vault/resources/vault-defaults.md` — Section 3 (scope subTypes table)
+**File:** `obsidian/resources/vault-defaults.md` — Section 3 (scope subTypes table)
 
 **Questions:**
 
@@ -95,16 +95,16 @@ Update the scope subTypes table in Section 3 of `vault-defaults.md`.
 
 **What:** Configure where tasks without date context go (inbox) and where completed tasks are archived.
 
-**File:** Project CLAUDE.md and/or `task.management` rules reference
+**File:** Project CLAUDE.md and/or `plan/references/task-operations.md`
 
 **Questions:**
 
 1. "Where should tasks without a date context be collected? This is your task inbox."
-   - Default: `Almanac/actions/actions.md` under `## Inbox`
+   - Default: `Praxis/actions/actions.md` under `## Inbox`
    - Alternative: any path the user prefers
 
 2. "Where should completed tasks be archived after 14 days?"
-   - Default: `Almanac/actions/actions-archive.md`
+   - Default: `Praxis/actions/actions-archive.md`
    - Alternative: any path the user prefers
 
 3. "Is 14 days the right archival threshold, or would you prefer a different window?"
@@ -128,7 +128,7 @@ Add task configuration to the project's CLAUDE.md:
 
 **What:** Confirm the Zettldex naming pattern and scope ID format.
 
-**File:** `obsidian.vault/resources/vault-defaults.md` — Sections 1 and 5
+**File:** `obsidian/resources/vault-defaults.md` — Sections 1 and 5
 
 **Questions:**
 
@@ -150,7 +150,7 @@ If the user chooses defaults, no changes needed — the template is already conf
 
 **What:** Check if the user needs document types beyond the defaults, or wants to remove types they won't use.
 
-**File:** `obsidian.vault/resources/vault-defaults.md` — Sections 1 and 3
+**File:** `obsidian/resources/vault-defaults.md` — Sections 1 and 3
 
 **Questions:**
 
@@ -215,4 +215,4 @@ After completing core initialization:
 > **Next steps:**
 > - If you have other ZettleDeck modules installed, run `/zettledeck.init {module}` to configure them
 > - Run `/zettledeck.init status` to see what's configured
-> - Start using `/obsidian.vault` to interact with your vault
+> - Start using `/obsidian` to interact with your vault

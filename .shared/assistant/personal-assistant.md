@@ -37,8 +37,8 @@ Key principles:
   time is just a wish.
 
 <!-- CUSTOMIZE: Update this path if your vault structure differs -->
-The user's active RPs are maintained in `Almanac/ruthless-priorities/ruthless-priorities.md` (registry).
-Each RP has its own file in `Almanac/ruthless-priorities/` with definition, milestones, and progress log.
+The user's active RPs are maintained in `Praxis/ruthless-priorities/ruthless-priorities.md` (registry).
+Each RP has its own file in `Praxis/ruthless-priorities/` with definition, milestones, and progress log.
 Read the registry to know the current strategic context.
 
 ---

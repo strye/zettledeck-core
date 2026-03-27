@@ -1,6 +1,6 @@
-# Task Management — Rules
+# Task Format — Rules
 
-Rules for writing, tracking, and archiving tasks across the vault. All workflows that create or modify tasks follow these conventions.
+Conventions for writing tasks in Obsidian markdown files. All workflows that create or modify tasks follow these formatting rules.
 
 ## Task Format
 
@@ -58,17 +58,6 @@ Same format as action items, with an `@{person}:` prefix in the description:
 
 The `@` prefix is how the dashboard query distinguishes waiting-for items from owned actions.
 
-## Where Tasks Are Written
-
-| Scenario | Write to |
-|----------|----------|
-| Task from a meeting on a specific day | That day's diary file under `## Action Items` or `## Waiting For` |
-| Task from email triage | Current day's diary file under `## Action Items` or `## Waiting For` |
-| Task with no date context | Actions inbox file (configured by consuming project) |
-| Manually entered by user | Wherever the user writes it — the plugin finds it vault-wide |
-
-> **Note for integrators:** The actions inbox path and archive path are project-specific. Set `task.actions_inbox` and `task.archive_path` in your project configuration, or define them in your project's CLAUDE.md. Defaults are not assumed — the consuming project must specify these paths.
-
 ## RP Alignment Tags
 
 Tasks related to a Ruthless Priority can include an Obsidian tag with the `#rp/` namespace:
@@ -78,15 +67,6 @@ Tasks related to a Ruthless Priority can include an Obsidian tag with the `#rp/`
 ```
 
 RP tags are optional. The assistant may suggest them when a task clearly aligns with an active RP.
-
-## Archival
-
-- **Threshold:** Completed (`✅`) or cancelled (`❌`) tasks older than 14 days.
-- **Target:** Archive file configured by the consuming project (see note above).
-- **Format:** Tasks grouped under `## {YYYY-MM-DD} Archive` headers, newest first.
-- **Process:** Always recommend-first. The assistant identifies candidates, presents them, and waits for user approval before moving anything.
-- **Metadata:** Full task line preserved including all emoji signifiers and attribution.
-- **Source cleanup:** When a task is archived, it is removed from its source file and appended to the archive.
 
 ## Examples
 
@@ -100,7 +80,7 @@ Waiting-for from email:
 - [ ] @Jordan: Confirm budget approval *(from: email — RE: Q2 Budget, 2026-03-07)* 🔼 ➕ 2026-03-08 📅 2026-03-12
 ```
 
-Completed and ready for archive:
+Completed:
 ```
 - [x] Send follow-up to Kate *(from: email — RE: Timeline, 2026-02-18)* ➕ 2026-02-18 📅 2026-02-20 ✅ 2026-02-20
 ```

@@ -1,9 +1,9 @@
 ---
-name: obsidian.vault
+name: obsidian
 description: Interact with the Obsidian vault using the obsidian CLI — read, search, create, move, manage tags/links/tasks, and inspect metadata. Works across all modes: notes, search, tasks, properties, and links.
 ---
 
-# Obsidian Vault Skill
+# Obsidian — CLI Vault Operations
 
 Interact with the Obsidian vault directly via the `obsidian` CLI. Covers reading and writing notes, full-text search, task management, tag/link navigation, and YAML property operations.
 
@@ -22,7 +22,7 @@ Call this skill when the user requests:
 - "List all tasks in my vault"
 - "What are my tags?"
 - "Set the [property] on [note] to [value]"
-- `/obsidian.vault [mode] [args]`
+- `/obsidian [mode] [args]`
 
 **Modes**: `search`, `read`, `create`, `append`, `prepend`, `move`, `rename`, `delete`, `tags`, `links`, `backlinks`, `orphans`, `tasks`, `properties`, `files`, `outline`
 
@@ -392,7 +392,7 @@ obsidian task path="file.md" line=42 status="/"
 
 **Note**: `task:create` does NOT exist — create tasks by appending markdown to a note with `obsidian append`.
 
-**Task format**: Always use Obsidian Tasks emoji signifiers when creating tasks via `append` (see `task.management` skill rules for full format).
+**Task format**: Always use Obsidian Tasks emoji signifiers when creating tasks via `append` (see `markdown/task-format.md` for full format).
 
 ---
 

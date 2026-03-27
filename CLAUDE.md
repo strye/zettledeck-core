@@ -18,7 +18,7 @@ Personal productivity workspace for an Amazon Solutions Architect. This is not a
 │   └── features/       # Feature breakdowns with user stories
 ├── guides/             # Getting started guides
 └── resources/          # Development reference docs
-Almanac/
+Praxis/
 ├── diary/              # Daily diary files and weekly views
 ├── actions/            # Task dashboard and archive
 └── ruthless-priorities/# Strategic priority tracking
@@ -49,7 +49,7 @@ Almanac/
 
 ### Ruthless Priorities
 - Maximum 3 active RPs. They operate on a quarter/half-year horizon.
-- Source of truth: `Almanac/ruthless-priorities/ruthless-priorities.md`.
+- Source of truth: `Praxis/ruthless-priorities/ruthless-priorities.md`.
 - Rules for RP-aware prioritization, stall detection, and weekly review are in `.kiro/steering/ruthless-priorities.md`.
 
 ## Steering Files (When to Read What)

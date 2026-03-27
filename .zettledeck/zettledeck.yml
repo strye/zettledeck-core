@@ -11,8 +11,8 @@
 
 modules: []
   # Uncomment to add modules:
-  # - name: zettledeck-almanac
-  #   repo: github.com/strye/zettledeck-almanac
+  # - name: zettledeck-praxis
+  #   repo: github.com/strye/zettledeck-praxis
   #   ref: main
   # - name: zettledeck-nexus
   #   repo: github.com/strye/zettledeck-nexus

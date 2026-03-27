@@ -35,7 +35,7 @@ title: "Document Title"
 
 ## File Structure for Vault
 
-**See:** `obsidian.vault/resources/vault-steering.md` and `obsidian.vault/resources/vault-defaults.md` for complete Obsidian vault organization rules.
+**See:** `obsidian/resources/vault-steering.md` and `obsidian/resources/vault-defaults.md` for complete Obsidian vault organization rules.
 
 **Key Points:**
 - Vault organized hierarchically: Scope → Focus → Project → (content/objective/meeting/etc.)

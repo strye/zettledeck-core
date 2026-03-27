@@ -200,6 +200,28 @@ install_module_assets() {
         done
     fi
 
+    # Scaffold project-root directories (non-destructive)
+    if [[ -d "${module_dir}/scaffolding" ]]; then
+        while IFS= read -r -d '' rel_path; do
+            local target="${PROJECT_ROOT}/${rel_path}"
+            if [[ -d "${module_dir}/scaffolding/${rel_path}" ]]; then
+                if [[ ! -d "$target" ]]; then
+                    mkdir -p "$target"
+                    log_info "  Created directory: ${rel_path}"
+                fi
+            elif [[ -f "${module_dir}/scaffolding/${rel_path}" ]]; then
+                if [[ ! -f "$target" ]]; then
+                    mkdir -p "$(dirname "$target")"
+                    cp "${module_dir}/scaffolding/${rel_path}" "$target"
+                    log_info "  Scaffolded file: ${rel_path}"
+                    ((installed++))
+                else
+                    log_info "  Scaffold file '${rel_path}' already exists. Skipping."
+                fi
+            fi
+        done < <(cd "${module_dir}/scaffolding" && find . -mindepth 1 \( -type f -o -type d \) -print0 | sed -z 's|^\./||')
+    fi
+
     # Copy module scripts
     if [[ -d "${module_dir}/scripts" ]]; then
         for script_file in "${module_dir}/scripts"/*; do
@@ -354,6 +376,25 @@ cmd_update() {
                 chmod +x "${CONFIG_DIR}/scripts/${script_name}"
                 log_info "  Updated script: ${script_name}"
             done
+        fi
+
+        # Scaffold project-root directories (non-destructive — never overwrite user content)
+        if [[ -d "${clone_dir}/scaffolding" ]]; then
+            while IFS= read -r -d '' rel_path; do
+                local target="${PROJECT_ROOT}/${rel_path}"
+                if [[ -d "${clone_dir}/scaffolding/${rel_path}" ]]; then
+                    if [[ ! -d "$target" ]]; then
+                        mkdir -p "$target"
+                        log_info "  Created directory: ${rel_path}"
+                    fi
+                elif [[ -f "${clone_dir}/scaffolding/${rel_path}" ]]; then
+                    if [[ ! -f "$target" ]]; then
+                        mkdir -p "$(dirname "$target")"
+                        cp "${clone_dir}/scaffolding/${rel_path}" "$target"
+                        log_info "  Scaffolded file: ${rel_path}"
+                    fi
+                fi
+            done < <(cd "${clone_dir}/scaffolding" && find . -mindepth 1 \( -type f -o -type d \) -print0 | sed -z 's|^\./||')
         fi
 
         log_ok "Updated ${name}."

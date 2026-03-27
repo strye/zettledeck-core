@@ -49,9 +49,7 @@ Loaded in this order at the start of every session:
 
 These background skills auto-load when the relevant domain is active. Both Kiro and Claude Code share these via `.shared/skills/`:
 
-- `.shared/skills/task.management/` — task format, emoji signifiers, attribution, archival
-- `.shared/skills/ruthless.priorities/` — RP framework, prioritization, stall detection
-- `.shared/skills/markdown.conventions/` — frontmatter, wikilinks, vault file structure
+- `.shared/skills/markdown/` — frontmatter, wikilinks, vault file structure, task format rules
 - `.shared/skills/email.management/` — email classification, sensitivity rules, thread handling
 
 ---

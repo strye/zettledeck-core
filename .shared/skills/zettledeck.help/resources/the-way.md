@@ -14,9 +14,23 @@ From the Chrysalis, ideas graduate based on what they're becoming:
 
 Running alongside all of this is the **Nexus**, which looks inward rather than outward. It analyzes what's already accumulated across the vault — surfacing patterns, contradictions, implicit ideas, and cross-domain connections. Nexus doesn't create new content so much as it reveals what's already there but hasn't been articulated yet. Its outputs often feed back into the Chrysalis or Foundry as new threads to develop.
 
-The **Almanac** sits underneath everything as the operational backbone — diary entries, task management, and ruthless priorities that keep the whole system moving with intention rather than just momentum.
+**Praxis** sits underneath everything as the operational backbone — diary entries, task management, ruthless priorities, and correspondence that keep the whole system moving with intention rather than just momentum.
 
 The **Reliquary** is the final destination for anything worth keeping permanently.
+
+---
+
+## System vs Vault
+
+ZettleDeck workspaces and the Obsidian vault are two separate concerns.
+
+**Workspaces** are the operational spaces described below — top-level folders where specific kinds of work happen (capture, incubation, research, content crafting, etc.). They are scaffolded by ZettleDeck modules.
+
+**The vault** is the knowledge organization system — document types, Zettldex naming, front-matter taxonomy, scope hierarchies, and placement rules. It is configured via `obsidian/resources/vault-defaults.md` and governed by `vault-steering.md`.
+
+The **Reliquary** is the bridge between the two: it is a workspace whose internal structure *is* the vault. Content graduates from other workspaces into the Reliquary, where it takes on vault structure (doc types, Zettldex addresses, full front-matter) and lives permanently.
+
+When thinking about *where work happens* → workspaces. When thinking about *how knowledge is organized* → the vault.
 
 ---
 
@@ -28,11 +42,12 @@ Raw capture space for unstructured notes, quick ideas, and spontaneous thinking.
 ### Chrysalis
 Incubation space where captured ideas from Atelier (or anywhere) sit while they develop. Notes here have shown enough promise to revisit but aren't yet structured enough for Foundry, Tesseract, or Nexus. Periodically review Chrysalis to promote items that have matured, merge related fragments, or discard ideas that have gone cold.
 
-### Almanac
-Operational and management files — the backbone that keeps the system running with intention.
+### Praxis
+Daily practice and operational management — the backbone that keeps the system running with intention.
 - Diary (daily, weekly, monthly files)
 - Actions (task management)
 - Ruthless priorities (top-level goals and priority management)
+- Correspondence (via the Scriptorium workspace)
 
 ### Foundry
 Content workshop where ideas get shaped into finished artifacts. Files here pick up full metadata, proper naming, and front-matter structure. Because Obsidian can group files based on front-matter regardless of location, content can be organized flexibly. Finished work publishes to the Reliquary.
@@ -44,7 +59,7 @@ Knowledge intelligence space — where vault analysis, idea surfacing, and refle
 Core content management storage. The long-term home for finished, structured knowledge. This is what a traditional vault would contain — the permanent collection.
 
 ### Scriptorium
-Space for analyzing and crafting smaller responses — emails, Slack messages, and other correspondence that needs thought but not the full Foundry treatment.
+Space for analyzing and crafting smaller responses — emails, Slack messages, and other correspondence that needs thought but not the full Foundry treatment. Provided by the Praxis module alongside the Praxis workspace.
 
 ### Tesseract
 Research space where external investigation happens. Items here are expected to either publish to the Reliquary for long-term storage, merge with other work (Foundry content, Nexus projects), or be discarded as one-time reference.
@@ -60,8 +75,8 @@ Chrysalis (incubation)
     ↓
     ├── Foundry (content crafting) → Reliquary (permanent storage)
     ├── Tesseract (research) → Reliquary / Foundry / Nexus
-    ├── Scriptorium (correspondence)
     └── Nexus (vault intelligence) → Chrysalis / Foundry
                                         ↑
-Almanac (operations) ───────────── runs underneath everything
+Praxis (daily practice) ──────────── runs underneath everything
+    └── Scriptorium (correspondence)
 ```
