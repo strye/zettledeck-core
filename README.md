@@ -4,9 +4,12 @@ A project template for ZettleDeck — a structured markdown system for personal 
 
 ## What This Is
 
-ZettleDeck organizes knowledge using a hierarchical vault structure with consistent frontmatter, naming conventions, and task management. Clone this template to start a new vault project. It includes:
+ZettleDeck is an opinionated knowledge management framework for Obsidian, built on the spirit of [Zettelkasten](https://en.wikipedia.org/wiki/Zettelkasten). It organizes knowledge through metadata and connections rather than rigid folder hierarchies — documents can live anywhere in the vault and remain meaningfully grouped through shared scope IDs.
 
-- **Vault steering** — structural rules (`vault-steering.md`) and customizable defaults (`vault-defaults.md`) for document types, hierarchical addressing, placement, and frontmatter
+Clone this template to start a new vault project. It includes:
+
+- **Scope-based organization** — every document belongs to a scope, linked by a shared `scopeId`. Physical location in the vault is flexible; relationships are carried by metadata.
+- **Vault steering** — structural rules and reference documentation for document types, hierarchical addressing, placement, and frontmatter
 - **Markdown conventions** — rules for frontmatter management, wikilinks, editing practices, and status values
 - **Task management** — Obsidian Tasks plugin format with emoji signifiers, attribution patterns, priority levels, and archival conventions
 - **Obsidian vault skill** — CLI-based vault interaction (search, read, create, append, move, tags, links, tasks, properties)
@@ -44,21 +47,24 @@ cd my-vault
 
 ```
 my-vault/
-├── .shared/                        # Shared assets (hidden from Obsidian)
+├── .shared/                        # Shared assets (hidden from vault)
 │   ├── skills/
 │   │   ├── markdown/               # Reference — markdown conventions + task format
-│   │   ├── obsidian/         # Invocable — CLI vault operations
+│   │   ├── zettledeck/             # Core methodology — help, promote, vault rules
 │   │   │   └── resources/
 │   │   │       ├── vault-steering.md   # Structural rules (static)
-│   │   │       └── vault-defaults.md   # Customizable config
+│   │   │       ├── vault-defaults.md   # Reference docs for document types
+│   │   │       └── the-way.md          # System philosophy and workspace flow
 │   │   └── zettledeck.init/        # Invocable — interactive project setup
 │   │       └── resources/
 │   │           └── core.md
 │   ├── agents/                     # Agent definitions
 │   ├── steering/                   # Steering files
 │   └── templates/                  # Template files
-├── .zettledeck/                    # Infrastructure (hidden from Obsidian)
+├── .zettledeck/                    # Infrastructure (hidden from vault)
 │   ├── zettledeck.yml              # Add-on module manifest
+│   ├── core/
+│   │   └── config.json             # Vault configuration (edit directly or via init)
 │   ├── init-state.yml              # Init tracking (created by /zettledeck.init)
 │   └── scripts/
 │       └── zd                      # Module composer CLI
@@ -69,6 +75,7 @@ my-vault/
 │   ├── skills → ../.shared/skills
 │   ├── steering → ../.shared/steering
 │   └── agents/                     # Individual symlinks + generated JSON
+├── Reliquary/                      # The vault — permanent structured knowledge
 └── README.md
 ```
 
@@ -130,38 +137,91 @@ Loaded automatically when working with markdown files or tasks. Defines:
 
 Archive and inbox paths are project-specific. Configure during `/zettledeck.init core`.
 
-### obsidian (invocable)
+### zettledeck (invocable + reference)
 
-Full CLI interface to the Obsidian vault. Invoke with `/obsidian [mode]`.
+Core methodology skill. Provides vault structure reference, conversational help, and content promotion. Other skills draw on `zettledeck/resources/vault-steering.md` and `vault-defaults.md` for document type and placement rules.
 
-**Modes:** `search`, `read`, `create`, `append`, `prepend`, `move`, `rename`, `delete`, `open`, `tags`, `links`, `backlinks`, `orphans`, `deadends`, `unresolved`, `tasks`, `properties`, `files`, `folders`, `outline`, `recents`, `vault`, `eval`
+```
+/zettledeck help [question]   — Answer questions about ZettleDeck concepts
+/zettledeck promote [file]    — Promote content to the Reliquary with full vault structure
+```
 
-**Requirements:** Obsidian 1.12.4+, running in background, CLI registered.
+The `promote` workflow reads the source document, infers docType, scope, and placement, then walks through a confirmation wizard before applying frontmatter and moving the file.
+
+**Vault interaction** (search, create, move, tasks, etc.) is provided by the `zettledeck-obsidian` module.
 
 ### zettledeck.init (invocable)
 
-Interactive project setup. Invoke with `/zettledeck.init`.
+Interactive project setup. Two workflows:
+
+1. **Wizard mode:** Run `/zettledeck.init core` to walk through guided setup. Writes `.zettledeck/core/config.json`.
+2. **Manual mode:** Edit `.zettledeck/core/config.json` directly. Changes take effect immediately.
 
 ```
 /zettledeck.init              Run all available init steps
-/zettledeck.init core         Core setup only
+/zettledeck.init core         Core setup wizard
 /zettledeck.init <module>     Module-specific setup
 /zettledeck.init status       Show what's configured
 ```
 
-Covers: vault identity, folder structure, document types, task paths, naming conventions. Each installed module can contribute its own init steps.
+Covers: vault identity, folder structure, document types, task paths, naming conventions. All configuration is stored in `.zettledeck/core/config.json` (user-editable). Each installed module can contribute its own init steps with their own config files.
 
-## Vault Steering
+## The ZettleDeck Methodology
 
-Split into two files inside the `obsidian` skill:
+ZettleDeck is built on one core idea: **relationships between documents should be carried by metadata, not folder location**.
 
-- `resources/vault-steering.md` — the structural engine (addressing, front-matter spec, tag rules, validation). Stays static.
-- `resources/vault-defaults.md` — customizable document types, folder structure, naming conventions. Personalized during `/zettledeck.init core`.
+### Scopes and ScopeIds
 
-The defaults file includes `<!-- CUSTOMIZE -->` comments at the sections to modify:
+Every document in a ZettleDeck vault has a `scopeId` — a numeric identifier that binds it to a knowledge domain. All documents sharing a `scopeId` belong to the same scope, regardless of where they physically live in the vault.
 
-1. **Section 1** — Document types and prefix configuration
-2. **Section 2** — Top-level folder structure
+Each scope has exactly one **scope document** (prefix `S`) — a lightweight overview file that serves as the anchor and entry point for that domain. From it you can navigate every related focus, project, note, and piece of content in the scope.
+
+```
+S1001_CareerDevelopment    ← scope document (the anchor)
+  F1001_SkillBuilding      ← focus under this scope
+  P1001_CertificationPlan  ← project under this scope
+  N1001_BookNotes          ← note that could live anywhere
+```
+
+All four files share `scopeId: 1001`. The note could be filed under any folder — its metadata connects it back to the scope.
+
+### Why This Matters
+
+In a traditional folder system, moving a document breaks its organizational context. In ZettleDeck, you can reorganize your vault freely — the `scopeId` always preserves the semantic relationship. This is the Zettelkasten principle applied to structured knowledge work: connections over containers.
+
+### Scope ID Methods
+
+How scope IDs are assigned is configurable:
+
+| Method | How it works |
+|--------|-------------|
+| **assignedRanges** | Each top-level folder owns a numeric range tied to its prefix. `10_Personal/` owns IDs 1000–1999. IDs immediately signal which domain a document belongs to. |
+| **incremental** | A single global counter increments for every new scope. Simpler, no range boundaries. |
+
+Configure in `.zettledeck/core/config.json` via `scopeMethod`.
+
+---
+
+## Vault Configuration
+
+All vault configuration is stored in `.zettledeck/core/config.json`:
+
+- **vaultName / vaultPath** — Vault name and location
+- **scopeMethod** — `assignedRanges` or `incremental`
+- **topLevelFolders** — Top-level folder structure (with ranges if using assignedRanges)
+- **scopeSubTypes** — What kinds of scopes live in each folder
+- **prefixesEnabled** — Whether to use single-letter prefixes on filenames (e.g., `P1001_ProjectName`)
+- **useEngagements** — Enable the optional engagement document type
+- **taskInbox / taskArchive / taskArchiveThreshold** — Task management paths and archival window
+
+Edit this file directly, or run `/zettledeck.init core` to walk through the setup wizard.
+
+### Vault Steering Rules
+
+Two files inside the `obsidian` skill define how the vault works:
+
+- `resources/vault-steering.md` — the structural engine (addressing, front-matter spec, tag rules, validation)
+- `resources/vault-defaults.md` — reference documentation showing default structure and document types
 
 ## Available Modules
 

@@ -22,11 +22,11 @@ The **Reliquary** is the final destination for anything worth keeping permanentl
 
 ## System vs Vault
 
-ZettleDeck workspaces and the Obsidian vault are two separate concerns.
+ZettleDeck workspaces and the knowledge vault are two separate concerns.
 
 **Workspaces** are the operational spaces described below — top-level folders where specific kinds of work happen (capture, incubation, research, content crafting, etc.). They are scaffolded by ZettleDeck modules.
 
-**The vault** is the knowledge organization system — document types, Zettldex naming, front-matter taxonomy, scope hierarchies, and placement rules. It is configured via `obsidian/resources/vault-defaults.md` and governed by `vault-steering.md`.
+**The vault** is the knowledge organization system — document types, Zettldex naming, front-matter taxonomy, scope hierarchies, and placement rules. It is configured via `.zettledeck/core/config.json` and governed by `vault-steering.md`.
 
 The **Reliquary** is the bridge between the two: it is a workspace whose internal structure *is* the vault. Content graduates from other workspaces into the Reliquary, where it takes on vault structure (doc types, Zettldex addresses, full front-matter) and lives permanently.
 
@@ -50,13 +50,13 @@ Daily practice and operational management — the backbone that keeps the system
 - Correspondence (via the Scriptorium workspace)
 
 ### Foundry
-Content workshop where ideas get shaped into finished artifacts. Files here pick up full metadata, proper naming, and front-matter structure. Because Obsidian can group files based on front-matter regardless of location, content can be organized flexibly. Finished work publishes to the Reliquary.
+Content workshop where ideas get shaped into finished artifacts. Files here pick up full metadata, proper naming, and front-matter structure. Finished work publishes to the Reliquary.
 
 ### Nexus
 Knowledge intelligence space — where vault analysis, idea surfacing, and reflective thinking produce artifacts. This is the convergence point for cross-domain connections, contradiction detection, trend analysis, and skill identification. Content here is the output of looking across the vault and finding what's hidden in the patterns: implicit ideas, evolving beliefs, and opportunities for synthesis.
 
 ### Reliquary
-Core content management storage. The long-term home for finished, structured knowledge. This is what a traditional vault would contain — the permanent collection.
+Core content management storage. The long-term home for finished, structured knowledge. This is the permanent collection — everything that lives here has full ZettleDeck structure (scope, zettldex, frontmatter, placement).
 
 ### Scriptorium
 Space for analyzing and crafting smaller responses — emails, Slack messages, and other correspondence that needs thought but not the full Foundry treatment. Provided by the Praxis module alongside the Praxis workspace.

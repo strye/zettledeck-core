@@ -1,0 +1,52 @@
+{
+  "vaultName": "Reliquary",
+  "vaultPath": "Reliquary",
+  "prefixesEnabled": true,
+  "useEngagements": false,
+  "scopeMethod": "assignedRanges",
+  "topLevelFolders": [
+    {
+      "theme": "Templates, admin, vault docs",
+      "folder": "00_Resources/",
+      "rangeStart": 0,
+      "rangeEnd": 999,
+      "nextId": 0
+    },
+    {
+      "theme": "Personal focuses and projects",
+      "folder": "10_Personal/",
+      "rangeStart": 1000,
+      "rangeEnd": 1999,
+      "nextId": 1000
+    },
+    {
+      "theme": "Professional focuses and projects",
+      "folder": "20_Professional/",
+      "rangeStart": 2000,
+      "rangeEnd": 2999,
+      "nextId": 2000
+    }
+  ],
+  "scopeSubTypes": {
+    "Resources": [
+      "template",
+      "reference",
+      "admin"
+    ],
+    "Personal": [
+      "general",
+      "health",
+      "finance",
+      "goal"
+    ],
+    "Professional": [
+      "career",
+      "growth",
+      "networking",
+      "goal"
+    ]
+  },
+  "taskInbox": "Praxis/actions/actions.md",
+  "taskArchive": "Praxis/actions/actions-archive.md",
+  "taskArchiveThreshold": 14
+}

@@ -160,4 +160,4 @@ Instructions for what to write and where.
 
 Available init resources are in the `resources/` subdirectory:
 
-- [core.md](resources/core.md) — Vault structure, task paths, vault steering template
+- [core.md](resources/core.md) — Vault structure, task paths, scope ID method

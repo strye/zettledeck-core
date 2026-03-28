@@ -1,22 +1,24 @@
-# Vault Agent Steering File
+# ZettleDeck Vault Steering
 
-> **Purpose**: This file gives a vault agent everything it needs to understand the structural
-> rules of the vault — hierarchical addressing, front-matter specification, tag construction,
+> **Purpose**: This file gives a skill or agent everything it needs to understand the structural
+> rules of a ZettleDeck vault — hierarchical addressing, front-matter specification, tag construction,
 > status lifecycle, placement logic, and validation.
 >
 > **Customization**: Document types, folder structure, subTypes, and naming conventions are
-> defined in `vault-defaults.md` (same directory). That file is what users personalize during
-> `/zettledeck.init`. This file stays static.
+> defined in `.zettledeck/core/config.json` and documented in `vault-defaults.md` (same directory).
+> This file stays static.
 
 ---
 
 ## 1. Vault Overview
 
-This is an **Obsidian** personal knowledge vault. Documents are organized in a hierarchy
+This is a **ZettleDeck** personal knowledge vault. Documents are organized in a hierarchy
 with consistent front-matter metadata encoding each document's position via `zettldex`,
 `root`, `scope`, `parentFile`, and related fields.
 
-The available document types and hierarchy are defined in `vault-defaults.md`.
+Relationships between documents are carried by metadata — documents can live anywhere
+in the vault and remain connected through shared `scopeId` values. The available document
+types and hierarchy are defined in `vault-defaults.md`.
 
 ---
 
@@ -33,15 +35,11 @@ If prefixes are disabled, the pattern is: `{scopeId}_{TitleInPascalCase}.md`
 
 The prefix-to-docType mapping is defined in `vault-defaults.md`, Section 1.
 
-**Exception — Jot**: No prefix, filed in `Void/` or `Void/Void_N/`, minimal metadata.
-
 ### Step 2 — Check the front-matter `docType` field
 
 ```yaml
 docType: {one of the enabled document types from vault-defaults.md}
 ```
-
-Note: `jot` files have `docType: note` and `subType: jot`.
 
 ### Step 3 — Check the file's folder path
 
@@ -51,33 +49,32 @@ Use the placement rules in Section 6 of this file to infer docType from folder l
 
 ## 3. Front-Matter Specification
 
-### 3a. Universal Properties (every document type except jot)
+### 3a. Universal Properties (every document type)
 
-| Property     | Type         | Required | Rule |
-|--------------|-------------|----------|------|
-| `aliases`    | list[string] | yes      | First item is the human-readable document title |
-| `creationDate` | string     | yes      | Format: `dddd Do MMMM YYYY` (e.g., "Friday 28th February 2026") |
-| `timestamp`  | string       | yes      | Format: `YYYYMMDDHHmmss` (e.g., "20260228143022") |
-| `root`       | string       | yes      | The scope/root ID this document belongs to (quoted numeric string) |
-| `zettldex`   | string       | yes      | Hierarchical address — see Section 4 |
-| `docType`    | string       | yes      | Primary type keyword (from vault-defaults.md) |
-| `subType`    | string       | yes      | Secondary type keyword (see vault-defaults.md per-type) |
-| `tags`       | list         | yes      | See Section 5 — Tag Rules |
-| `status`     | string       | cond.    | Omit if `na`; present otherwise (see Section 7) |
-| `description`| string       | optional | Short description; omit if empty |
-| `cssClasses` | list[string] | optional | `["dashboard"]` for folder-type docs |
+| Property       | Type         | Required | Rule |
+|----------------|-------------|----------|------|
+| `aliases`      | list[string] | yes      | First item is the human-readable document title |
+| `creationDate` | string       | yes      | Format: `dddd Do MMMM YYYY` (e.g., "Friday 28th February 2026") |
+| `timestamp`    | string       | yes      | Format: `YYYYMMDDHHmmss` (e.g., "20260228143022") |
+| `root`         | string       | yes      | The scope/root ID this document belongs to (quoted numeric string) |
+| `zettldex`     | string       | yes      | Hierarchical address — see Section 4 |
+| `docType`      | string       | yes      | Primary type keyword (from vault-defaults.md) |
+| `subType`      | string       | yes      | Secondary type keyword (see vault-defaults.md per-type) |
+| `tags`         | list         | yes      | See Section 5 — Tag Rules |
+| `status`       | string       | cond.    | Omit if `na`; present otherwise (see Section 7) |
+| `description`  | string       | optional | Short description; omit if empty |
 
 ### 3b. Lineage Properties (inherited from parent)
 
 Add these based on what the parent chain contains:
 
-| Property     | When to add                          | Value |
-|--------------|--------------------------------------|-------|
-| `scope`      | Always (except scope docs set own)   | The rootmost scope ID |
-| `scopeFile`  | When scope exists                    | File name of the scope doc |
-| `parentFile` | Always (except scope docs)           | File name of immediate parent |
-| `focusFile`  | When parent is focus, or inherited   | File name of the focus ancestor |
-| `projectFile`| When parent is project, or inherited | File name of the project ancestor |
+| Property      | When to add                          | Value |
+|---------------|--------------------------------------|-------|
+| `scope`       | Always (except scope docs set own)   | The rootmost scope ID |
+| `scopeFile`   | When scope exists                    | File name of the scope doc |
+| `parentFile`  | Always (except scope docs)           | File name of immediate parent |
+| `focusFile`   | When parent is focus, or inherited   | File name of the focus ancestor |
+| `projectFile` | When parent is project, or inherited | File name of the project ancestor |
 
 ### 3c. Type-Specific Additional Properties
 
@@ -96,36 +93,19 @@ priority: 0 | 30 | 60 | 90   # 0=ruthless, 30=working, 60=standard, 90=pause
 sortKey: {rootId}_{custom}    # used for list ordering
 ```
 
-### 3d. Jot Front-Matter (minimal — standalone quick capture)
-
-```yaml
----
-aliases:
-  - {docTitle}
-creationDate: {dddd Do MMMM YYYY}
-timestamp: {YYYYMMDDHHmmss}
-docType: note
-tags:
-  - note
-  - jot
-subType: jot
-status: intake
----
-```
-
 ---
 
 ## 4. Zettldex (Hierarchical Address) Rules
 
 The `zettldex` encodes a document's position in the hierarchy:
 
-| Document                     | Zettldex formula                        | Example      |
-|------------------------------|----------------------------------------|--------------|
-| scope (if enabled)           | `{scopeId}.S`                          | `1001.S`     |
-| focus (child of scope)       | `{parentZettldex}.F`                   | `1001.S.F`   |
-| project (child of focus)     | `{parentZettldex}.P`                   | `1001.S.F.P` |
-| note (child of project)      | `{parentZettldex}.N`                   | `1001.S.F.P.N` |
-| content (child of project)   | `{parentZettldex}.C`                   | `1001.S.F.P.C` |
+| Document                   | Zettldex formula      | Example        |
+|----------------------------|-----------------------|----------------|
+| scope                      | `{scopeId}.S`         | `1001.S`       |
+| focus (child of scope)     | `{parentZettldex}.F`  | `1001.S.F`     |
+| project (child of focus)   | `{parentZettldex}.P`  | `1001.S.F.P`   |
+| note (child of project)    | `{parentZettldex}.N`  | `1001.S.F.P.N` |
+| content (child of project) | `{parentZettldex}.C`  | `1001.S.F.P.C` |
 
 **Rule**: Always derive from `parentZettldex` found in the parent file's front-matter, then append `.{subCode}`.
 
@@ -165,7 +145,7 @@ Scopes create their own folder:
 {topLevel}/{subCategory}/{scopeId}_{ScopeTitle}/
 ```
 
-Example: `40_Professional/41_CareerTech/1001_ProjectAlpha/`
+Example: `20_Professional/21_CareerTech/1001_ProjectAlpha/`
 
 ### Child Document Placement
 
@@ -176,25 +156,24 @@ General rules:
 - Container types (scope, focus, project) create subfolders
 - Leaf types (note, research) go in the parent's folder
 - Meeting notes go flat in a `4_Meetings/` subfolder
-- Jots go in `Void/` or `Void/Void_{N}/`
 
 ---
 
 ## 7. Status Values
 
-| Value    | Meaning                        | Typical docTypes |
-|----------|-------------------------------|-----------------|
-| `intake` | Just captured, unsorted       | note, objective |
-| `ideation` | Being explored              | objective, ideation |
-| `backlog` | Queued, not started          | objective, project |
-| `active` | Actively being worked on      | content, research, engagement |
-| `steady` | Ongoing, maintained           | scope, focus, project, recurring meetings |
-| `hold`   | Paused temporarily            | any |
-| `cleanup` | Needs revision               | any |
-| `complete` | Finished                    | objective, content |
-| `archive` | Archived, no longer active   | any |
-| `silent` | Hidden                        | any |
-| `na`     | Not applicable (field omitted) | note, meeting (one-time), ideation |
+| Value      | Meaning                         | Typical docTypes |
+|------------|---------------------------------|-----------------|
+| `intake`   | Just captured, unsorted         | note, objective |
+| `ideation` | Being explored                  | objective, ideation |
+| `backlog`  | Queued, not started             | objective, project |
+| `active`   | Actively being worked on        | content, research, engagement |
+| `steady`   | Ongoing, maintained             | scope, focus, project, recurring meetings |
+| `hold`     | Paused temporarily              | any |
+| `cleanup`  | Needs revision                  | any |
+| `complete` | Finished                        | objective, content |
+| `archive`  | Archived, no longer active      | any |
+| `silent`   | Hidden                          | any |
+| `na`       | Not applicable (field omitted)  | note, meeting (one-time), ideation |
 
 **Rule**: When `status = "na"`, the field is **completely omitted** from front-matter.
 
@@ -205,33 +184,25 @@ General rules:
 Use this flow when categorizing an unknown file:
 
 ```
-1. Is the file in Void/ folder?
-   YES → docType=note, subType=jot. Done.
-   NO → continue
-
-2. Does the file have front-matter?
-   NO → it's probably a jot or uncategorized. Treat as jot.
+1. Does the file have front-matter?
+   NO → treat as unstructured note (intake, no zettldex)
    YES → read docType and subType from front-matter
 
-3. Does the filename match {PREFIX}{number}_{Title} pattern?
+2. Does the filename match {PREFIX}{number}_{Title} pattern?
    YES → confirm docType from prefix table (vault-defaults.md)
    NO → infer from folder location (see placement table)
 
-4. Does the file have a zettldex value?
-   NO → it's either a scope or an uncategorized file
+3. Does the file have a zettldex value?
+   NO → it's either a scope or an unstructured file
    YES → parse depth: "XXXX.S" = scope, "XXXX.S.F" = focus, etc.
 
-5. Verify parent lineage:
+4. Verify parent lineage:
    - scope: has scope= pointing to self
    - all others: has parentFile= pointing to a valid file
 
-6. Check status field:
+5. Check status field:
    - absent → status is "na"
    - present → use value as-is
-
-7. Check cssClasses:
-   - ["dashboard"] → this is a folder-type/container doc
-   - absent → leaf/content doc
 ```
 
 ---
@@ -275,12 +246,10 @@ parentFile: "{parentFileName}"
 focusFile: "{focusFileName}"       # if in focus hierarchy
 projectFile: "{projectFileName}"   # if in project hierarchy
 status: {status}                   # omit if "na"
-cssClasses:                        # omit if none
-  - {class}
 ---
 ```
 
-For **scope** documents (if enabled), these lineage fields are replaced by:
+For **scope** documents, lineage fields are replaced by:
 ```yaml
 scope: "{scopeId}"          # points to self
 scopeFile: "{ownFileName}"  # points to self
