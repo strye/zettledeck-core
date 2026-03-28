@@ -1,4 +1,5 @@
 {
+  "documentRepo": "Reliquary",
   "prefixesEnabled": true,
   "scopeMethod": "assignedRanges",
   "topLevelFolders": [

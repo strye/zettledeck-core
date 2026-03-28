@@ -22,6 +22,7 @@ All ZettleDeck core configuration lives in `.zettledeck/core/config.json`. This 
 
 ```json
 {
+  "documentRepo": "Reliquary",
   "prefixesEnabled": true,
   "scopeMethod": "assignedRanges",
   "topLevelFolders": [
@@ -145,7 +146,21 @@ For each top-level folder the user kept or added:
    - Suggest reasonable defaults based on the folder name
    - Always include `goal` as an option
 
-### 4. Document Naming
+### 4. Document Repository
+
+**What:** The name of the top-level folder that serves as the permanent vault — the destination for all promoted and structured content.
+
+**Config key:** `documentRepo`
+
+**Questions:**
+
+1. "What is the name of your permanent storage folder? This is where structured notes and documents live long-term."
+   - Default: `Reliquary`
+   - Any folder name is valid — e.g., `Vault`, `Archive`, `Library`
+
+**Note:** This name is used by the `zettledeck` skill when promoting content. If you rename the folder later, update this value to match.
+
+### 5. Document Naming
 
 **What:** Confirm whether to use single-letter prefixes on filenames.
 
@@ -171,6 +186,7 @@ Present the wizard summary:
 ```
 Vault Configuration Summary
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Document repo:      {documentRepo}
 Top-level folders:  {list of folders}
 Scope ID method:    {assignedRanges | incremental}
   Ranges:           {folder → range, or "global nextId: N"}

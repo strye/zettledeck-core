@@ -208,6 +208,7 @@ Configure in `.zettledeck/core/config.json` via `scopeMethod`.
 
 Core vault configuration is stored in `.zettledeck/core/config.json`:
 
+- **documentRepo** — Name of the permanent storage folder (default: `Reliquary`; rename-safe)
 - **scopeMethod** — `assignedRanges` or `incremental`
 - **topLevelFolders** — Top-level folder structure (with ranges if using assignedRanges)
 - **scopeSubTypes** — What kinds of scopes live in each folder
