@@ -1,6 +1,8 @@
-# CLAUDE.md
+# ZettleDeck Workspace
 
 Personal productivity workspace for an Amazon Solutions Architect. This is not a code repository — it's a structured markdown system for daily planning, task management, email triage, and strategic prioritization, orchestrated through AI assistant prompts and Obsidian.md.
+
+---
 
 ## Module Configuration
 
@@ -10,6 +12,8 @@ Runtime configuration for installed ZettleDeck modules lives in `.zettledeck/{mo
 
 | Module | Config | What it configures |
 |--------|--------|--------------------|
+
+---
 
 ## Project Structure
 
@@ -32,6 +36,8 @@ Praxis/
 ├── actions/            # Task dashboard and archive
 └── ruthless-priorities/# Strategic priority tracking
 ```
+
+---
 
 ## Key Conventions
 
@@ -61,6 +67,8 @@ Praxis/
 - Source of truth: `Praxis/ruthless-priorities/ruthless-priorities.md`.
 - Rules for RP-aware prioritization, stall detection, and weekly review are in `.kiro/steering/ruthless-priorities.md`.
 
+---
+
 ## Steering Files (When to Read What)
 
 | File | Inclusion | Read when... |
@@ -75,6 +83,8 @@ Praxis/
 | `prompt-evolution.md` | auto | Enhancing the assistant through specs |
 | `writing-standards.md` | manual | Writing or reviewing Amazon narrative documents (loaded by narrative-editor agent) |
 
+---
+
 ## Prompts (Workflows)
 
 | Prompt | Trigger | What it does |
@@ -85,25 +95,34 @@ Praxis/
 | `email-triage.md` | Manual hook | Four modes: triage, flagged review, cleanup, draft reply |
 | `compose.md` | Manual hooks (2) | Draft correspondence: process existing file or create new |
 
-## Agents
+---
 
-| Agent | Description | Capabilities |
-|-------|-------------|-------------|
-| `narrative-editor` | Unified Amazon narrative writing agent | Drafts documents from raw input, coaches through structured writing, reviews existing documents for quality. Loads document-type context from steering files on demand. |
+## Agent Taxonomy
 
-## Archived Agents
+Three types of entities operate in this system:
 
-The following writing agents have been replaced by the `narrative-editor` agent and archived to `.kiro/agents/writers/`. They are preserved for historical reference but are not active — Kiro does not scan agent subfolders.
+**Bots:** Intelligent tools with a specific, bounded task. Single-purpose. Do not ask a bot to operate outside its defined scope.
 
-| Agent | Original Purpose |
-|-------|-----------------|
-| `2x2-writer` | Amazon 2x2 business review documents |
-| `3yp-coach` | Three-year plan coaching |
-| `narrative-reviewer` | Narrative document review and editing |
-| `op-planner` | Operational plan (OP1/OP2) drafting |
-| `prfaq-coach` | PR/FAQ working backwards coaching |
+**Agents:** Operate across a domain. Two subtypes:
+- **Hedgehogs:** Deep specialists. Authoritative within their domain. Defer to them on domain-specific decisions.
+- **Foxes:** Generalists. Work across domains, connect things, adapt to context.
 
-> Document-type steering files (e.g., `prfaq-document-type.md`, `2x2-document-type.md`) provide format-specific writing rules for each Amazon document type. These are loaded on demand by the narrative-editor agent.
+**Conductors:** Agents that manage other agents and bots. Orchestrate work across the system. A Conductor may also function as a Fox when working directly with the user.
+
+Agent definitions and load orders live in `AGENTS.md`.
+
+---
+
+## Shared Skills
+
+Both Kiro and Claude Code share reference skills via `.shared/skills/`:
+
+- `.shared/skills/markdown/` — frontmatter, wikilinks, vault file structure, task format rules
+- `.shared/skills/email.management/` — email classification, sensitivity rules, thread handling
+
+These auto-load when the relevant domain is active.
+
+---
 
 ## MCP Servers
 
@@ -111,6 +130,8 @@ The following writing agents have been replaced by the `narrative-editor` agent 
 |--------|---------|
 | `aws-outlook-mcp` | Outlook calendar and email access |
 | `aws-sentral-mcp` | Salesforce CRM access |
+
+---
 
 ## Boundaries
 
@@ -122,6 +143,8 @@ The following writing agents have been replaced by the `narrative-editor` agent 
 - 🚫 **Never:** Delete or archive email without explicit approval.
 - 🚫 **Never:** Guilt the user about missed tasks or broken streaks.
 - 🚫 **Never:** Add calendar events that aren't time-specific commitments.
+
+---
 
 ## Tone
 

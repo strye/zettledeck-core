@@ -2,22 +2,7 @@
 
 This file defines the agent system for this workspace. It is loaded automatically at the start of every session. It does not contain behavioral content directly. It declares what agents exist, what files they load, and in what order.
 
----
-
-## Agent Taxonomy
-
-Three types of entities operate in this system:
-
-**Bots:** Intelligent tools with a specific, bounded task. Single-purpose. Do not
-ask a bot to operate outside its defined scope.
-
-**Agents:** Operate across a domain. Two subtypes:
-- **Hedgehogs:** Deep specialists. Authoritative within their domain. Defer to them
-  on domain-specific decisions.
-- **Foxes:** Generalists. Work across domains, connect things, adapt to context.
-
-**Conductors:** Agents that manage other agents and bots. Orchestrate work across
-the system. A Conductor may also function as a Fox when working directly with the user.
+For workspace structure, conventions, agent taxonomy, and shared skills, see `.shared/steering/zettledeck.md`.
 
 ---
 
@@ -47,10 +32,7 @@ Loaded in this order at the start of every session:
 
 ### Reference Skills (loaded on demand)
 
-These background skills auto-load when the relevant domain is active. Both Kiro and Claude Code share these via `.shared/skills/`:
-
-- `.shared/skills/markdown/` — frontmatter, wikilinks, vault file structure, task format rules
-- `.shared/skills/email.management/` — email classification, sensitivity rules, thread handling
+Background skills auto-load when the relevant domain is active. See `.shared/steering/zettledeck.md` for the full skills inventory.
 
 ---
 
