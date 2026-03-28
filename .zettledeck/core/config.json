@@ -1,8 +1,5 @@
 {
-  "vaultName": "Reliquary",
-  "vaultPath": "Reliquary",
   "prefixesEnabled": true,
-  "useEngagements": false,
   "scopeMethod": "assignedRanges",
   "topLevelFolders": [
     {
@@ -45,8 +42,5 @@
       "networking",
       "goal"
     ]
-  },
-  "taskInbox": "Praxis/actions/actions.md",
-  "taskArchive": "Praxis/actions/actions-archive.md",
-  "taskArchiveThreshold": 14
+  }
 }

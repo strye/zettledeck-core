@@ -1,16 +1,20 @@
 ---
 module: core
 order: 10
-description: Core vault structure, task management paths, and vault steering customization
+description: Core vault structure — folder layout, scope ID method, document naming conventions
 ---
 
 # Core Initialization
 
-Walk the user through configuring the foundational ZettleDeck settings. This covers vault identity, document organization, task management paths, and the vault steering template.
+Walk the user through configuring the foundational ZettleDeck settings. This covers folder structure, scope ID method, scope subtypes, and document naming conventions.
+
+**Out of scope for core init:**
+- Vault name and path — configured during `zettledeck-obsidian` init
+- Task inbox and archive paths — configured during `zettledeck-praxis` init
 
 ## Configuration Convention
 
-All ZettleDeck core configuration lives in `.zettledeck/core/config.json`. This file is the single source of truth for vault structure, task paths, and document conventions. Skills read their config at runtime from this file.
+All ZettleDeck core configuration lives in `.zettledeck/core/config.json`. This file is the single source of truth for vault structure and document conventions. Skills read their config at runtime from this file.
 
 **Config file location:** `.zettledeck/core/config.json`
 
@@ -18,10 +22,7 @@ All ZettleDeck core configuration lives in `.zettledeck/core/config.json`. This 
 
 ```json
 {
-  "vaultName": "my-vault",
-  "vaultPath": "Reliquary",
   "prefixesEnabled": true,
-  "useEngagements": false,
   "scopeMethod": "assignedRanges",
   "topLevelFolders": [
     { "theme": "Templates, admin, vault docs", "folder": "00_Resources/", "rangeStart": 0, "rangeEnd": 999, "nextId": 0 },
@@ -32,10 +33,7 @@ All ZettleDeck core configuration lives in `.zettledeck/core/config.json`. This 
     "Resources": ["template", "reference", "admin"],
     "Personal": ["general", "health", "finance", "goal"],
     "Professional": ["career", "growth", "networking", "goal"]
-  },
-  "taskInbox": "Praxis/actions/actions.md",
-  "taskArchive": "Praxis/actions/actions-archive.md",
-  "taskArchiveThreshold": 14
+  }
 }
 ```
 
@@ -43,10 +41,7 @@ All ZettleDeck core configuration lives in `.zettledeck/core/config.json`. This 
 
 ```json
 {
-  "vaultName": "my-vault",
-  "vaultPath": "Reliquary",
   "prefixesEnabled": true,
-  "useEngagements": false,
   "scopeMethod": "incremental",
   "nextId": 1000,
   "topLevelFolders": [
@@ -58,10 +53,7 @@ All ZettleDeck core configuration lives in `.zettledeck/core/config.json`. This 
     "Resources": ["template", "reference", "admin"],
     "Personal": ["general", "health", "finance", "goal"],
     "Professional": ["career", "growth", "networking", "goal"]
-  },
-  "taskInbox": "Praxis/actions/actions.md",
-  "taskArchive": "Praxis/actions/actions-archive.md",
-  "taskArchiveThreshold": 14
+  }
 }
 ```
 
@@ -84,22 +76,7 @@ Before starting initialization:
 
 If no config.json exists, walk the user through each configuration section in order. After all questions are answered, proceed to **Phase 1: Review**.
 
-### 1. Vault Identity
-
-**What:** Establish the vault's name and root path so other skills know where to operate.
-
-**Config keys:** `vaultName`, `vaultPath`
-
-**Questions:**
-
-1. "What is the name of your Obsidian vault?"
-   - Default: the project directory name
-
-2. "Is the vault root the same as the project root, or is it at a subfolder?"
-   - Default: `Reliquary` (standard ZettleDeck layout)
-   - If different: ask for the path
-
-### 2. Top-Level Folder Structure
+### 1. Top-Level Folder Structure
 
 **What:** Define the vault's top-level organizational folders.
 
@@ -123,9 +100,11 @@ If no config.json exists, walk the user through each configuration section in or
 
 **Note:** If adding folders, suggest using the numeric prefix pattern (00_, 10_, 20_, etc.) so assigned ranges can be derived from the prefix if that method is chosen.
 
-### 3. Scope ID Method
+### 2. Scope ID Method
 
 **What:** Choose how scope IDs are assigned across the vault. Scope IDs are the numeric root of every document's hierarchical address.
+
+**Format rule**: Scope IDs are always stored and displayed as 4-digit zero-padded strings — `"0001"` not `"1"`, `"0999"` not `"999"`. This applies in frontmatter, filenames, zettldex values, and tags. The config stores raw integers for range arithmetic; always zero-pad when writing them to documents.
 
 **Config keys:** `scopeMethod`, and either `nextId` (incremental) or `rangeStart`/`rangeEnd`/`nextId` per folder (assignedRanges)
 
@@ -152,7 +131,7 @@ If no config.json exists, walk the user through each configuration section in or
 3. If **incremental**: "What number should IDs start at?"
    - Default: 1000
 
-### 4. Scope SubTypes
+### 3. Scope SubTypes
 
 **What:** Define what kinds of scopes live in each top-level folder. These drive document categorization.
 
@@ -166,38 +145,16 @@ For each top-level folder the user kept or added:
    - Suggest reasonable defaults based on the folder name
    - Always include `goal` as an option
 
-### 5. Task Management Paths
+### 4. Document Naming
 
-**What:** Configure where tasks without date context go (inbox) and where completed tasks are archived.
+**What:** Confirm whether to use single-letter prefixes on filenames.
 
-**Config keys:** `taskInbox`, `taskArchive`, `taskArchiveThreshold`
-
-**Questions:**
-
-1. "Where should tasks without a date context be collected? This is your task inbox."
-   - Default: `Praxis/actions/actions.md`
-   - Alternative: any path the user prefers
-
-2. "Where should completed tasks be archived?"
-   - Default: `Praxis/actions/actions-archive.md`
-   - Alternative: any path the user prefers
-
-3. "How many days after completion should tasks be archived?"
-   - Default: 14 days
-
-### 6. Document Naming and Optional Types
-
-**What:** Confirm prefix usage and enable optional document types.
-
-**Config keys:** `prefixesEnabled`, `useEngagements`
+**Config key:** `prefixesEnabled`
 
 **Questions:**
 
-1. "File prefixes (single uppercase letters prepended to filenames, e.g., P1001_ProjectName) help identify document types at a glance. Would you like to enable them?"
+1. "File prefixes (single uppercase letters prepended to filenames, e.g., `P1001_ProjectName`) help identify document types at a glance in the file system. Would you like to enable them?"
    - Default: yes
-
-2. "Engagements are an optional document type for tracking customer, partner, or team interactions. Would you like to enable them?"
-   - Default: no — enable later if needed
 
 ---
 
@@ -214,16 +171,11 @@ Present the wizard summary:
 ```
 Vault Configuration Summary
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Vault name:         {name}
-Vault path:         {path}
 Top-level folders:  {list of folders}
 Scope ID method:    {assignedRanges | incremental}
   Ranges:           {folder → range, or "global nextId: N"}
-Task inbox:         {path}
-Task archive:       {path}
-Archive threshold:  {N} days
+Scope subtypes:     {folder: [subtypes], ...}
 File prefixes:      {enabled/disabled}
-Engagements:        {enabled/disabled}
 ```
 
 **Question:**
@@ -250,7 +202,7 @@ After the user confirms their configuration, apply the changes:
 
 ### Step 1 — Write config.json
 
-Write `.zettledeck/core/config.json` with all finalized values. This is the single source of truth for vault structure, folders, and task paths. The obsidian skill reads this file at runtime.
+Write `.zettledeck/core/config.json` with all finalized values.
 
 For `assignedRanges`: include `rangeStart`, `rangeEnd`, and `nextId` on each folder entry.
 
@@ -264,7 +216,7 @@ Add or update a **Vault Configuration** section in the project's CLAUDE.md:
 ## Vault Configuration
 
 - **Config location:** `.zettledeck/core/config.json`
-- Vault name, path, folder structure, and task paths are configured here.
+- Vault folder structure, scope ID method, and document naming conventions are configured here.
 - Edit that file directly, or run `/zettledeck.init core` again to reconfigure.
 ```
 
@@ -276,8 +228,6 @@ Write `.zettledeck/init-state.yml`:
 initialized:
   core:
     date: {today}
-    vaultName: {name}
-    vaultPath: {path}
 pending: []
 ```
 
@@ -287,11 +237,10 @@ pending: []
 
 After completing core initialization:
 
-> Core setup complete. Your vault structure, task paths, and document conventions are configured in `.zettledeck/core/config.json`.
+> Core setup complete. Your vault folder structure and document conventions are configured in `.zettledeck/core/config.json`.
 >
 > **Next steps:**
 > - You can manually edit `.zettledeck/core/config.json` at any time. Changes take effect immediately.
 > - Or run `/zettledeck.init core` again to reconfigure via the wizard.
-> - If you have other ZettleDeck modules installed, run `/zettledeck.init {module}` to configure them
-> - Run `/zettledeck.init status` to see what's configured
-> - Start using `/obsidian` to interact with your vault
+> - If you have other ZettleDeck modules installed, run `/zettledeck.init {module}` to configure them.
+> - Run `/zettledeck.init status` to see what's configured.

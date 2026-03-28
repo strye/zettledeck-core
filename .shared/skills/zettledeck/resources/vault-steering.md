@@ -29,7 +29,9 @@ types and hierarchy are defined in `vault-defaults.md`.
 If file prefixes are enabled (see `vault-defaults.md`), the filename encodes the document type:
 
 **Pattern**: `{PREFIX}{scopeId}_{TitleInPascalCase}.md`
-**Example**: `P1001_CareerStrategy.md` → project, scopeId=1001
+**Example**: `P1001_CareerStrategy.md` → project, scopeId="1001"
+
+**ScopeId format**: Always a 4-digit zero-padded string — `"0001"` not `"1"`, `"0999"` not `"999"`. This applies in filenames, frontmatter, tags, and zettldex values everywhere.
 
 If prefixes are disabled, the pattern is: `{scopeId}_{TitleInPascalCase}.md`
 
@@ -56,7 +58,7 @@ Use the placement rules in Section 6 of this file to infer docType from folder l
 | `aliases`      | list[string] | yes      | First item is the human-readable document title |
 | `creationDate` | string       | yes      | Format: `dddd Do MMMM YYYY` (e.g., "Friday 28th February 2026") |
 | `timestamp`    | string       | yes      | Format: `YYYYMMDDHHmmss` (e.g., "20260228143022") |
-| `root`         | string       | yes      | The scope/root ID this document belongs to (quoted numeric string) |
+| `root`         | string       | yes      | The scope/root ID — 4-digit zero-padded string (e.g., `"0001"`, `"1001"`) |
 | `zettldex`     | string       | yes      | Hierarchical address — see Section 4 |
 | `docType`      | string       | yes      | Primary type keyword (from vault-defaults.md) |
 | `subType`      | string       | yes      | Secondary type keyword (see vault-defaults.md per-type) |
@@ -109,6 +111,8 @@ The `zettldex` encodes a document's position in the hierarchy:
 
 **Rule**: Always derive from `parentZettldex` found in the parent file's front-matter, then append `.{subCode}`.
 
+**ScopeId in zettldex**: The numeric prefix is always 4 digits, zero-padded. `"0001.S"` not `"1.S"`.
+
 The subCode mapping is defined in `vault-defaults.md`, Section 1.
 
 ---
@@ -128,6 +132,8 @@ tags:
 ```
 
 **Quoting rule**: Any tag that is numeric or looks numeric MUST be quoted. Text tags are unquoted.
+
+**ScopeId in tags**: The rootId tag is always 4-digit zero-padded (e.g., `"0001"` not `"1"`).
 
 **System tags** (auto-managed, do NOT include in editable custom tags):
 - `zettldex` value, `rootId` value, `docType`, `subType`

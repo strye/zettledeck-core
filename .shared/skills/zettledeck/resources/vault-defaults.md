@@ -33,14 +33,6 @@ When disabled, filename pattern: `{scopeId}_{TitleInPascalCase}.md`
 | `I`    | ideation   | I       | Brainstorming and idea capture |
 | `R`    | research   | R       | Research and analysis notes |
 
-### Optional Document Types
-
-<!-- Engagement — Customer, partner, or team interaction tracking.
-     Enable via useEngagements: true in .zettledeck/core/config.json
-
-| `E`    | engagement | E       | Customer, partner, or team interaction tracking |
--->
-
 ---
 
 ## 2. Top-Level Folder Structure
@@ -120,13 +112,6 @@ Configured via `topLevelFolders` in `.zettledeck/core/config.json`.
 - **Default status**: `active`
 - **subTypes**: domain, strategic, foundational, framing
 
-### Optional: engagement (if enabled)
-- **Purpose**: Customer, partner, or team interaction tracking
-- **Valid parents**: scope, focus, project
-- **Default status**: `active`
-- **subTypes**: customer, partner, team, community, workshop, other
-- **Template body**: `Customer: X / Goal: / Date: X` + Next Steps section
-
 ---
 
 ## 4. Child Document Placement
@@ -140,7 +125,6 @@ After determining the parent folder, child docs are placed like this:
 | project    | `{parentFolder}/3_Projects/{P}{rootId}_{Title}/` (creates subfolder) |
 | objective  | `{parentFolder}/2_Objectives/{O}{rootId}_{Title}/` (optional subfolder) |
 | content    | `{parentFolder}/5_Content/{C}{rootId}_{Title}/` (optional subfolder) |
-| engagement | `{parentFolder}/6_Engagements/{E}{rootId}_{Title}/` (optional subfolder) — if enabled |
 | meeting    | `{parentFolder}/4_Meetings/` (no subfolder — all meetings flat) |
 | note       | `{parentFolder}/` (same folder as parent, no subfolder) |
 | ideation   | `{parentFolder}/Ideation/` |
@@ -160,7 +144,7 @@ After determining the parent folder, child docs are placed like this:
 ```
 
 - `subCode`: single uppercase letter (from the prefix table in Section 1)
-- `rootId`: the scope's numeric ID
+- `rootId`: the scope's numeric ID — always 4-digit zero-padded (e.g., `0001`, `1001`)
 - `documentTitle`: human title with spaces removed, each word capitalized (PascalCase)
 
 **Examples:**

@@ -183,7 +183,9 @@ S1001_CareerDevelopment    ← scope document (the anchor)
   N1001_BookNotes          ← note that could live anywhere
 ```
 
-All four files share `scopeId: 1001`. The note could be filed under any folder — its metadata connects it back to the scope.
+All four files share `scopeId: "1001"`. The note could be filed under any folder — its metadata connects it back to the scope.
+
+Scope IDs are always 4-digit zero-padded strings — `"0001"` not `"1"`, `"0999"` not `"999"`. This applies in frontmatter, filenames, zettldex values, and tags.
 
 ### Why This Matters
 
@@ -204,24 +206,23 @@ Configure in `.zettledeck/core/config.json` via `scopeMethod`.
 
 ## Vault Configuration
 
-All vault configuration is stored in `.zettledeck/core/config.json`:
+Core vault configuration is stored in `.zettledeck/core/config.json`:
 
-- **vaultName / vaultPath** — Vault name and location
 - **scopeMethod** — `assignedRanges` or `incremental`
 - **topLevelFolders** — Top-level folder structure (with ranges if using assignedRanges)
 - **scopeSubTypes** — What kinds of scopes live in each folder
 - **prefixesEnabled** — Whether to use single-letter prefixes on filenames (e.g., `P1001_ProjectName`)
-- **useEngagements** — Enable the optional engagement document type
-- **taskInbox / taskArchive / taskArchiveThreshold** — Task management paths and archival window
 
 Edit this file directly, or run `/zettledeck.init core` to walk through the setup wizard.
 
+Vault name and path are configured by the `zettledeck-obsidian` module (`.zettledeck/zettledeck-obsidian/config.json`). Task inbox and archive paths are configured by the `zettledeck-praxis` module.
+
 ### Vault Steering Rules
 
-Two files inside the `obsidian` skill define how the vault works:
+Two files inside the `zettledeck` skill define how the vault works:
 
-- `resources/vault-steering.md` — the structural engine (addressing, front-matter spec, tag rules, validation)
-- `resources/vault-defaults.md` — reference documentation showing default structure and document types
+- `zettledeck/resources/vault-steering.md` — the structural engine (addressing, front-matter spec, tag rules, validation)
+- `zettledeck/resources/vault-defaults.md` — reference documentation showing default structure and document types
 
 ## Available Modules
 
