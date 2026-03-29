@@ -14,6 +14,11 @@ Interactive setup skill that walks users through customizing their ZettleDeck pr
 /zettledeck.init core         → Core setup only (vault structure, task paths)
 /zettledeck.init <module>     → Module-specific setup (e.g., praxis, nexus, foundry)
 /zettledeck.init status       → Show what's been configured and what still needs setup
+/zettledeck.init list         → List all available modes with descriptions
+/zettledeck.init folders      → Show the current top-level folder structure from config
+/zettledeck.init add-folder   → Add a new folder entry to the document repository
+/zettledeck.init remove-folder → Remove a folder entry from the document repository
+/zettledeck.init sync-ids     → Scan the vault and correct all nextId values in config
 ```
 
 ## How It Works
@@ -66,18 +71,25 @@ Before starting any module init:
 3. If no module argument given, discover all available modules and present them:
    - "I found init steps for: **core**, **praxis**, **nexus**. Run all, or pick one?"
 
-### Step 1 — Determine which module(s) to configure
+### Step 1 — Route by mode argument
 
-| Argument | Behavior |
-|----------|----------|
-| (none) | Discover all, ask user to confirm running all or select |
-| `core` | Run core resource only |
-| `<module>` | Find and run that module's resource file |
-| `status` | Report init state and exit |
+| Argument | Type | Behavior |
+|----------|------|----------|
+| (none) | init | Discover all modules, ask user to confirm running all or select |
+| `core` | init | Run core resource only |
+| `<module>` | init | Find and run that module's init-steps resource |
+| `status` | utility | Report init state and exit |
+| `list` | utility | Load `resources/list.md` and exit |
+| `folders` | utility | Load `resources/folders.md` and exit |
+| `add-folder` | utility | Load `resources/add-folder.md` and exit |
+| `remove-folder` | utility | Load `resources/remove-folder.md` and exit |
+| `sync-ids` | utility | Load `resources/sync-ids.md` and exit |
+
+**Utility modes** (list, folders, add-folder, remove-folder) skip Steps 0 and 3 — load their resource file and follow the instructions there. No pre-flight checks or post-init summary needed.
 
 ### Step 2 — Load and execute resource file(s)
 
-For each module being initialized:
+For **init modes** (core, module):
 
 1. Read the corresponding resource file (e.g., `resources/core.md`)
 2. Walk through each configuration section in order
@@ -161,3 +173,8 @@ Instructions for what to write and where.
 Available init resources are in the `resources/` subdirectory:
 
 - [core.md](resources/core.md) — Vault structure, task paths, scope ID method
+- [list.md](resources/list.md) — Lists all available modes with descriptions
+- [folders.md](resources/folders.md) — Displays current top-level folder structure
+- [add-folder.md](resources/add-folder.md) — Interactive wizard to add a folder to config
+- [remove-folder.md](resources/remove-folder.md) — Remove a folder entry from config
+- [sync-ids.md](resources/sync-ids.md) — Scan vault and correct all nextId values in config
