@@ -25,7 +25,7 @@ All ZettleDeck core configuration lives in `.zettledeck/core/config.json`. This 
   "documentRepo": "Reliquary",
   "prefixesEnabled": true,
   "scopeMethod": "assignedRanges",
-  "topLevelFolders": [
+  "repositoryFolders": [
     { "theme": "Templates, admin, vault docs", "folder": "00_Resources/", "rangeStart": 0, "rangeEnd": 999, "nextId": 0 },
     { "theme": "Personal focuses and projects", "folder": "10_Personal/", "rangeStart": 1000, "rangeEnd": 1999, "nextId": 1000 },
     { "theme": "Professional focuses and projects", "folder": "20_Professional/", "rangeStart": 2000, "rangeEnd": 2999, "nextId": 2000 }
@@ -45,7 +45,7 @@ All ZettleDeck core configuration lives in `.zettledeck/core/config.json`. This 
   "prefixesEnabled": true,
   "scopeMethod": "incremental",
   "nextId": 1000,
-  "topLevelFolders": [
+  "repositoryFolders": [
     { "theme": "Templates, admin, vault docs", "folder": "00_Resources/" },
     { "theme": "Personal focuses and projects", "folder": "10_Personal/" },
     { "theme": "Professional focuses and projects", "folder": "20_Professional/" }
@@ -77,11 +77,11 @@ Before starting initialization:
 
 If no config.json exists, walk the user through each configuration section in order. After all questions are answered, proceed to **Phase 1: Review**.
 
-### 1. Top-Level Folder Structure
+### 1. Repository Folder Structure
 
-**What:** Define the vault's top-level organizational folders.
+**What:** Define the internal organizational folders of the document repository (the Reliquary). These are not the workspace root folders — they are the partitions *inside* the permanent storage vault.
 
-**Config key:** `topLevelFolders`
+**Config key:** `repositoryFolders`
 
 **Show the user** the default starter structure:
 
@@ -187,7 +187,7 @@ Present the wizard summary:
 Vault Configuration Summary
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Document repo:      {documentRepo}
-Top-level folders:  {list of folders}
+Repository folders: {list of folders}
 Scope ID method:    {assignedRanges | incremental}
   Ranges:           {folder → range, or "global nextId: N"}
 Scope subtypes:     {folder: [subtypes], ...}

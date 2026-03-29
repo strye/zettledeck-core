@@ -39,7 +39,7 @@ Skip this question if `scopeMethod` is `incremental`.
 
 - Derive a suggestion from the numeric prefix if the folder follows the pattern (e.g., `30_` → 3000–3999, `21_` → 2100–2199)
 - Show the suggestion: "Based on your prefix, I'd suggest range **3000–3999**. Does that work, or would you like a custom range?"
-- Validate: the proposed range must not overlap with any existing `rangeStart`/`rangeEnd` in `topLevelFolders`
+- Validate: the proposed range must not overlap with any existing `rangeStart`/`rangeEnd` in `repositoryFolders`
 - If overlap detected, show which folder owns that range and ask the user to choose a different range
 - Set `nextId` to `rangeStart`
 
@@ -60,7 +60,7 @@ Ask: "Shall I add this to your config?"
 
 ### Step 4 — Write
 
-Append the new entry to `topLevelFolders` in `.zettledeck/core/config.json`.
+Append the new entry to `repositoryFolders` in `.zettledeck/core/config.json`.
 
 **assignedRanges entry:**
 ```json

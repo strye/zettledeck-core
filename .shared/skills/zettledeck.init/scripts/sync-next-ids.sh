@@ -28,7 +28,7 @@ if [[ "$SCOPE_METHOD" != "assignedRanges" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Parse topLevelFolders from config.json
+# Parse repositoryFolders from config.json
 # Outputs one line per folder: FOLDER|RANGE_START|RANGE_END|CURRENT_NEXT_ID
 # BSD awk compatible — no gensub, no match() with capture arrays
 # \r is stripped per-record to handle Windows line endings (WSL)
@@ -38,7 +38,7 @@ parse_folders() {
         { gsub(/\r/, "") }
         BEGIN { in_array=0; in_obj=0; fo=""; rs=""; re=""; ni="" }
 
-        /"topLevelFolders"/ { in_array=1; next }
+        /"repositoryFolders"/ { in_array=1; next }
         !in_array { next }
 
         /\{/ { in_obj=1; fo=""; rs=""; re=""; ni="" }
@@ -152,7 +152,7 @@ done < <(parse_folders)
 # ---------------------------------------------------------------------------
 # Rewrite config.json with updated nextId values
 # Uses awk to do a single-pass rewrite — only touches nextId lines inside
-# topLevelFolders objects whose folder name has a new value in the lookup.
+# repositoryFolders objects whose folder name has a new value in the lookup.
 # ---------------------------------------------------------------------------
 TMPFILE=$(mktemp)
 awk -v lookup="$LOOKUP" '
@@ -169,7 +169,7 @@ awk -v lookup="$LOOKUP" '
         }
     }
 
-    /"topLevelFolders"/ { in_array=1 }
+    /"repositoryFolders"/ { in_array=1 }
     in_array && /\{/    { in_obj=1; current_folder="" }
 
     in_array && in_obj && /"folder"/ {

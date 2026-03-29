@@ -46,7 +46,7 @@ Key values used by this skill:
 |-----|---------|
 | `documentRepo` | Name of the permanent storage folder (default: `Reliquary`) |
 | `scopeMethod` | `assignedRanges` or `incremental` |
-| `topLevelFolders` | Folder structure and scope ID ranges |
+| `repositoryFolders` | Internal folder structure of the document repository (scope ID ranges) |
 | `prefixesEnabled` | Whether filenames use single-letter type prefixes |
 
 ---

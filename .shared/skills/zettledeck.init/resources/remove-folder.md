@@ -15,14 +15,14 @@ All changes write to `.zettledeck/core/config.json`. Skill files are never modif
 
 1. Read `.zettledeck/core/config.json`
 2. If the file does not exist, tell the user: "No config found. Run `/zettledeck.init core` first."
-3. If `topLevelFolders` is empty or has only one entry, tell the user: "You need at least one folder in your config. Cannot remove the last entry."
+3. If `repositoryFolders` is empty or has only one entry, tell the user: "You need at least one folder in your config. Cannot remove the last entry."
 
 ### Step 2 — Show current folders
 
 Display the numbered list of current folders:
 
 ```
-Current Top-Level Folders
+Current Repository Folders
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  1  00_Resources/        0000–0999    Templates, admin, vault docs
  2  10_Personal/         1000–1999    Personal focuses and projects
@@ -47,7 +47,7 @@ If the user says no, cancel and exit without changes.
 
 ### Step 4 — Write
 
-Remove the selected entry from `topLevelFolders` and write the full updated config.json. Rewrite the complete file — do not attempt a partial edit.
+Remove the selected entry from `repositoryFolders` and write the full updated config.json. Rewrite the complete file — do not attempt a partial edit.
 
 ### Step 5 — Confirm
 

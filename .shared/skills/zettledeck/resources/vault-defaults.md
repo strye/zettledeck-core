@@ -37,9 +37,9 @@ The `prefix` value is also used directly as the zettldex segment (e.g., `1001.S`
 
 ---
 
-## 2. Top-Level Folder Structure
+## 2. Repository Folder Structure
 
-Configured via `topLevelFolders` in `.zettledeck/core/config.json`.
+Configured via `repositoryFolders` in `.zettledeck/core/config.json`.
 
 | Content theme | Top-level folder |
 |--------------|-----------------|

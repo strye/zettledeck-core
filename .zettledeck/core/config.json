@@ -2,7 +2,7 @@
   "documentRepo": "Reliquary",
   "prefixesEnabled": true,
   "scopeMethod": "assignedRanges",
-  "topLevelFolders": [
+  "repositoryFolders": [
     {
       "theme": "Templates, admin, vault docs",
       "folder": "00_Resources/",
