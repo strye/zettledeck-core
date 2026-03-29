@@ -1,0 +1,243 @@
+#!/usr/bin/env bash
+#
+# bootstrap — ZettleDeck dependency installer
+#
+# Checks for and installs required CLI tools: jq and yq.
+# Run this once before using the zd script.
+#
+# Usage:
+#   .zettledeck/scripts/bootstrap
+#
+# Supported platforms:
+#   macOS          — via Homebrew (installed automatically if missing)
+#   Linux Debian/Ubuntu/WSL — via apt + GitHub binary for yq
+#   Linux RHEL/Fedora/CentOS — via yum/dnf + GitHub binary for yq
+#   Linux Arch     — via pacman + GitHub binary for yq
+#   Windows        — native Windows is not supported; use WSL
+
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+log_info()  { echo -e "${BLUE}[bootstrap]${NC} $1"; }
+log_ok()    { echo -e "${GREEN}[bootstrap]${NC} $1"; }
+log_warn()  { echo -e "${YELLOW}[bootstrap]${NC} $1"; }
+log_error() { echo -e "${RED}[bootstrap]${NC} $1"; }
+
+# ─── Platform Detection ──────────────────────────────────────────────────────
+
+detect_platform() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "macos"
+    elif grep -qi microsoft /proc/version 2>/dev/null; then
+        echo "wsl"
+    elif [[ -f /etc/debian_version ]]; then
+        echo "debian"
+    elif [[ -f /etc/redhat-release ]] || [[ -f /etc/fedora-release ]]; then
+        echo "rhel"
+    elif [[ -f /etc/arch-release ]]; then
+        echo "arch"
+    else
+        echo "unknown"
+    fi
+}
+
+# ─── Homebrew (macOS) ────────────────────────────────────────────────────────
+
+ensure_homebrew() {
+    if command -v brew &>/dev/null; then
+        return 0
+    fi
+    log_warn "Homebrew not found. Installing..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    # Add brew to PATH for this session (Apple Silicon vs Intel)
+    if [[ -f /opt/homebrew/bin/brew ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -f /usr/local/bin/brew ]]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+    fi
+    log_ok "Homebrew installed."
+}
+
+# ─── yq Binary Download (Linux) ─────────────────────────────────────────────
+
+install_yq_linux() {
+    local arch
+    arch=$(uname -m)
+    local yq_arch
+    case "$arch" in
+        x86_64)        yq_arch="amd64" ;;
+        aarch64|arm64) yq_arch="arm64" ;;
+        armv7l)        yq_arch="arm" ;;
+        *)
+            log_error "Unsupported CPU architecture: ${arch}."
+            log_info "  Install yq manually: https://github.com/mikefarah/yq/releases/latest"
+            return 1
+            ;;
+    esac
+
+    local yq_url="https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${yq_arch}"
+    local install_dir
+
+    if [[ -w /usr/local/bin ]]; then
+        install_dir="/usr/local/bin"
+    else
+        install_dir="${HOME}/.local/bin"
+        mkdir -p "$install_dir"
+    fi
+
+    log_info "  Downloading yq (${yq_arch}) to ${install_dir}..."
+
+    if command -v curl &>/dev/null; then
+        curl -sSL "$yq_url" -o "${install_dir}/yq"
+    elif command -v wget &>/dev/null; then
+        wget -qO "${install_dir}/yq" "$yq_url"
+    else
+        log_error "Neither curl nor wget is available. Cannot download yq."
+        log_info "  Install manually: https://github.com/mikefarah/yq/releases/latest"
+        return 1
+    fi
+
+    chmod +x "${install_dir}/yq"
+
+    if [[ "$install_dir" == "${HOME}/.local/bin" ]]; then
+        log_warn "  yq installed to ${install_dir}."
+        log_warn "  Add this line to your shell profile (~/.bashrc or ~/.zshrc) if not present:"
+        log_warn "    export PATH=\"\$HOME/.local/bin:\$PATH\""
+    fi
+}
+
+# ─── Platform Installers ─────────────────────────────────────────────────────
+
+install_macos() {
+    ensure_homebrew
+
+    local to_install=()
+    command -v jq &>/dev/null || to_install+=("jq")
+    command -v yq &>/dev/null || to_install+=("yq")
+
+    if [[ ${#to_install[@]} -gt 0 ]]; then
+        log_info "Installing via Homebrew: ${to_install[*]}"
+        brew install "${to_install[@]}"
+    fi
+}
+
+install_debian() {
+    if ! command -v jq &>/dev/null; then
+        log_info "Installing jq via apt..."
+        sudo apt-get update -q && sudo apt-get install -y jq
+    fi
+
+    if ! command -v yq &>/dev/null; then
+        log_info "Installing yq..."
+        install_yq_linux
+    fi
+}
+
+install_rhel() {
+    if ! command -v jq &>/dev/null; then
+        log_info "Installing jq..."
+        if command -v dnf &>/dev/null; then
+            sudo dnf install -y jq
+        else
+            sudo yum install -y jq
+        fi
+    fi
+
+    if ! command -v yq &>/dev/null; then
+        log_info "Installing yq..."
+        install_yq_linux
+    fi
+}
+
+install_arch() {
+    if ! command -v jq &>/dev/null; then
+        log_info "Installing jq via pacman..."
+        sudo pacman -Sy --noconfirm jq
+    fi
+
+    if ! command -v yq &>/dev/null; then
+        log_info "Installing yq..."
+        install_yq_linux
+    fi
+}
+
+# ─── Main ────────────────────────────────────────────────────────────────────
+
+main() {
+    echo ""
+    log_info "ZettleDeck Dependency Check"
+    echo ""
+
+    local jq_ok=0 yq_ok=0
+    command -v jq &>/dev/null && jq_ok=1 || true
+    command -v yq &>/dev/null && yq_ok=1 || true
+
+    if [[ $jq_ok -eq 1 && $yq_ok -eq 1 ]]; then
+        log_ok "jq — $(jq --version)"
+        log_ok "yq — $(yq --version)"
+        echo ""
+        log_ok "All dependencies satisfied. You're ready to run: zd setup"
+        echo ""
+        return 0
+    fi
+
+    [[ $jq_ok -eq 1 ]] && log_ok "jq — already installed" || log_warn "jq — not found"
+    [[ $yq_ok -eq 1 ]] && log_ok "yq — already installed" || log_warn "yq — not found"
+    echo ""
+
+    local platform
+    platform=$(detect_platform)
+    log_info "Platform: ${platform}"
+    echo ""
+
+    case "$platform" in
+        macos)              install_macos ;;
+        debian|wsl)         install_debian ;;
+        rhel)               install_rhel ;;
+        arch)               install_arch ;;
+        unknown)
+            log_error "Unrecognized platform. Install dependencies manually:"
+            log_info "  jq:  https://jqlang.github.io/jq/download/"
+            log_info "  yq:  https://github.com/mikefarah/yq/releases/latest"
+            exit 1
+            ;;
+    esac
+
+    echo ""
+
+    # Final verification
+    local all_ok=1
+    if command -v jq &>/dev/null; then
+        log_ok "jq — $(jq --version)"
+    else
+        log_error "jq installation failed."
+        all_ok=0
+    fi
+    if command -v yq &>/dev/null; then
+        log_ok "yq — $(yq --version)"
+    else
+        log_error "yq installation failed."
+        all_ok=0
+    fi
+
+    echo ""
+
+    if [[ $all_ok -eq 1 ]]; then
+        log_ok "All dependencies installed. You're ready to run: zd setup"
+    else
+        log_error "One or more dependencies could not be installed automatically."
+        log_info "Install manually and re-run this script:"
+        log_info "  jq:  https://jqlang.github.io/jq/download/"
+        log_info "  yq:  https://github.com/mikefarah/yq/releases/latest"
+        exit 1
+    fi
+
+    echo ""
+}
+
+main "$@"

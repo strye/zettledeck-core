@@ -26,17 +26,16 @@ cd my-vault
 # 1.3 OPTIONAL Remove the `.git` folder and revision history
 # rm -rf .git
 
-# 2. Wire up your AI tool so core skills are visible
+# 2. Install CLI dependencies (jq and yq) — run once, auto-detects your platform
+.zettledeck/scripts/bootstrap
+
+# 3. Wire up your AI tool and install any declared modules
 #    (Create `.claude` and/or `.kiro` folder(s) first)
 .zettledeck/scripts/zd setup
 
-# 3. Run core init (in Claude Code or Kiro) — configures vault identity,
+# 4. Run core init (in Claude Code or Kiro) — configures vault identity,
 #    folder structure, task paths. Modules need this context.
 /zettledeck.init core
-
-# 4. Add add-on modules to .zettledeck/zettledeck.yml, then install them
-#    (automatically wires any new agents — no need to re-run zd setup)
-.zettledeck/scripts/zd install
 
 # 5. Run module init (in Claude Code or Kiro) — discovers and configures
 #    module-specific settings now that their init-steps are available
@@ -84,9 +83,9 @@ my-vault/
 Located at `.zettledeck/scripts/zd`. Manages add-on modules and tool wiring.
 
 ```bash
-zd install   # Install add-on modules from zettledeck.yml
+zd setup     # Wire AI tools (symlinks) and install declared modules — run this first
+zd install   # Install add-on modules from zettledeck.yml (also called by setup)
 zd update    # Update installed modules to latest
-zd setup     # Create tool wiring (Claude Code / Kiro symlinks)
 zd status    # Show installed modules and wiring status
 ```
 
@@ -102,10 +101,11 @@ zd status    # Show installed modules and wiring status
 
 ### What `zd setup` Does
 
-One-time wiring that connects AI tools to `.shared/`. Run once after cloning; `zd install` handles subsequent agent wiring automatically.
+One-time setup that wires AI tools to `.shared/` and then installs any declared modules. Run once after cloning.
 
-- **Claude Code**: symlinks `.claude/skills` and `.claude/agents` to `.shared/`, checks `CLAUDE.md` for steering references
+- **Claude Code**: symlinks `.claude/skills` and `.claude/agents` to `.shared/`
 - **Kiro**: symlinks `.kiro/skills` and `.kiro/steering` to `.shared/`, creates individual agent symlinks with companion JSON files
+- **Modules**: automatically runs `zd install` if modules are declared in `zettledeck.yml`
 
 ### Module Configuration
 
@@ -121,7 +121,7 @@ modules:
 ### Requirements
 
 - `git`
-- `yq` — install with `brew install yq`
+- `jq` and `yq` — run `.zettledeck/scripts/bootstrap` to install automatically
 - **Windows**: requires WSL (Windows Subsystem for Linux). The `zd` script uses bash and symlinks, which are not natively supported on Windows outside of WSL.
 
 ## Skills

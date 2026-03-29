@@ -53,12 +53,31 @@ log_error() { echo -e "${RED}[zd]${NC} $1"; }
 
 # Check dependencies
 check_deps() {
-    if ! command -v git &> /dev/null; then
+    local bootstrap_script
+    bootstrap_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/bootstrap"
+    local missing=0
+
+    if ! command -v git &>/dev/null; then
         log_error "git is required but not installed."
-        exit 1
+        log_info "  Download from: https://git-scm.com/downloads"
+        missing=1
     fi
-    if ! command -v yq &> /dev/null; then
-        log_error "yq is required but not installed. Install with: brew install yq"
+
+    if ! command -v yq &>/dev/null; then
+        log_error "yq is required but not installed."
+        missing=1
+    fi
+
+    if [[ $missing -eq 1 ]]; then
+        echo ""
+        if [[ -f "$bootstrap_script" ]]; then
+            log_info "Run the bootstrap script to install missing dependencies automatically:"
+            log_info "  ${bootstrap_script}"
+        else
+            log_info "Install missing dependencies manually:"
+            log_info "  macOS:  brew install yq"
+            log_info "  Linux:  https://github.com/mikefarah/yq/releases/latest"
+        fi
         exit 1
     fi
 }
@@ -139,7 +158,7 @@ install_module_assets() {
 
             cp -R "$skill_dir" "$target"
             log_info "  Installed skill: ${skill_name}"
-            ((installed++))
+            installed=$((installed + 1))
         done
     fi
 
@@ -158,7 +177,7 @@ install_module_assets() {
 
             cp "$agent_file" "$target"
             log_info "  Installed agent: ${agent_name}"
-            ((installed++))
+            installed=$((installed + 1))
         done
     fi
 
@@ -177,7 +196,7 @@ install_module_assets() {
 
             cp "$steering_file" "$target"
             log_info "  Installed steering: ${steering_name}"
-            ((installed++))
+            installed=$((installed + 1))
         done
     fi
 
@@ -196,7 +215,7 @@ install_module_assets() {
 
             cp "$template_file" "$target"
             log_ok "  Installed template: ${template_name}"
-            ((installed++))
+            installed=$((installed + 1))
         done
     fi
 
@@ -215,7 +234,7 @@ install_module_assets() {
                     mkdir -p "$(dirname "$target")"
                     cp "${module_dir}/scaffolding/${rel_path}" "$target"
                     log_info "  Scaffolded file: ${rel_path}"
-                    ((installed++))
+                    installed=$((installed + 1))
                 else
                     log_info "  Scaffold file '${rel_path}' already exists. Skipping."
                 fi
@@ -239,7 +258,7 @@ install_module_assets() {
             cp "$script_file" "$target"
             chmod +x "$target"
             log_info "  Installed script: ${script_name}"
-            ((installed++))
+            installed=$((installed + 1))
         done
     fi
 
@@ -251,7 +270,7 @@ install_module_assets() {
         if [[ ! -f "$init_target" ]]; then
             cp "${module_dir}/init-steps.md" "$init_target"
             log_info "  Installed init-steps: ${module_name}/init-steps.md"
-            ((installed++))
+            installed=$((installed + 1))
         else
             log_info "  init-steps for ${module_name} already exists. Skipping."
         fi
@@ -576,7 +595,7 @@ cmd_setup() {
 
     # ── Claude Code ──────────────────────────────────────────────────────
 
-    if [[ -d "$claude_dir" ]] || [[ -f "${PROJECT_ROOT}/CLAUDE.md" ]]; then
+    if [[ -d "$claude_dir" ]]; then
         log_info "Detected Claude Code. Setting up wiring..."
         mkdir -p "$claude_dir"
 
@@ -587,7 +606,7 @@ cmd_setup() {
         if [[ ! -d "${claude_dir}/skills" ]]; then
             ln -s "../.shared/skills" "${claude_dir}/skills"
             log_info "  Linked .claude/skills → .shared/skills"
-            ((wired++))
+            wired=$((wired + 1))
         else
             log_warn "  .claude/skills exists as a directory. Skipping symlink."
         fi
@@ -599,21 +618,9 @@ cmd_setup() {
         if [[ ! -d "${claude_dir}/agents" ]]; then
             ln -s "../.shared/agents" "${claude_dir}/agents"
             log_info "  Linked .claude/agents → .shared/agents"
-            ((wired++))
+            wired=$((wired + 1))
         else
             log_warn "  .claude/agents exists as a directory. Skipping symlink."
-        fi
-
-        # Check CLAUDE.md for steering reference
-        if [[ -f "${PROJECT_ROOT}/CLAUDE.md" ]]; then
-            if grep -q '.shared/steering' "${PROJECT_ROOT}/CLAUDE.md" 2>/dev/null; then
-                log_info "  CLAUDE.md already references .shared/steering."
-            else
-                log_warn "  CLAUDE.md does not reference .shared/steering."
-                log_info "  Add this to CLAUDE.md: 'Load and follow all steering files in .shared/steering/'"
-            fi
-        else
-            log_warn "  No CLAUDE.md found. Create one with steering references."
         fi
 
         log_ok "Claude Code wiring complete."
@@ -631,7 +638,7 @@ cmd_setup() {
         if [[ ! -d "${kiro_dir}/skills" ]]; then
             ln -s "../.shared/skills" "${kiro_dir}/skills"
             log_info "  Linked .kiro/skills → .shared/skills"
-            ((wired++))
+            wired=$((wired + 1))
         else
             log_warn "  .kiro/skills exists as a directory. Skipping symlink."
         fi
@@ -643,7 +650,7 @@ cmd_setup() {
         if [[ ! -d "${kiro_dir}/steering" ]]; then
             ln -s "../.shared/steering" "${kiro_dir}/steering"
             log_info "  Linked .kiro/steering → .shared/steering"
-            ((wired++))
+            wired=$((wired + 1))
         else
             log_warn "  .kiro/steering exists as a directory. Skipping symlink."
         fi
@@ -659,6 +666,13 @@ cmd_setup() {
         log_info "Create .claude/ or .kiro/ first, then re-run 'zd setup'."
     else
         log_ok "Tool wiring complete. ${wired} items wired."
+    fi
+
+    # Install modules if a config is present
+    if [[ -f "$CONFIG_FILE" ]]; then
+        echo ""
+        log_info "Module config found. Running install..."
+        cmd_install
     fi
 }
 
