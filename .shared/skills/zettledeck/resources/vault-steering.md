@@ -18,7 +18,8 @@ with consistent front-matter metadata encoding each document's position via `zet
 
 Relationships between documents are carried by metadata — documents can live anywhere
 in the vault and remain connected through shared `scopeId` values. The available document
-types and hierarchy are defined in `vault-defaults.md`.
+types and hierarchy are defined in `.zettledeck/core/config.json` under `documentTypes`.
+`vault-defaults.md` documents the default set for reference.
 
 ---
 
@@ -35,7 +36,7 @@ If file prefixes are enabled (see `vault-defaults.md`), the filename encodes the
 
 If prefixes are disabled, the pattern is: `{scopeId}_{TitleInPascalCase}.md`
 
-The prefix-to-docType mapping is defined in `vault-defaults.md`, Section 1.
+The prefix-to-docType mapping is defined in `.zettledeck/core/config.json` under `documentTypes` (`prefix` field).
 
 ### Step 2 — Check the front-matter `docType` field
 
@@ -80,7 +81,9 @@ Add these based on what the parent chain contains:
 
 ### 3c. Type-Specific Additional Properties
 
-**Meeting only:**
+Some document types declare extra required frontmatter fields via the `extraFrontmatter` array in their `documentTypes` config entry. Read the active type's entry and include those fields.
+
+**Default example — meeting:**
 ```yaml
 freqType: once | weeks | months | years
 freq: 0 | 1 | 2           # 0=once, 1=weekly/monthly/annual, 2=bi-weekly
@@ -109,11 +112,9 @@ The `zettldex` encodes a document's position in the hierarchy:
 | note (child of project)    | `{parentZettldex}.N`  | `1001.S.F.P.N` |
 | content (child of project) | `{parentZettldex}.C`  | `1001.S.F.P.C` |
 
-**Rule**: Always derive from `parentZettldex` found in the parent file's front-matter, then append `.{subCode}`.
+**Rule**: Always derive from `parentZettldex` found in the parent file's front-matter, then append `.{prefix}` (the type's `prefix` value from `documentTypes` in config).
 
 **ScopeId in zettldex**: The numeric prefix is always 4 digits, zero-padded. `"0001.S"` not `"1.S"`.
-
-The subCode mapping is defined in `vault-defaults.md`, Section 1.
 
 ---
 
@@ -218,7 +219,7 @@ Use this flow when categorizing an unknown file:
 When placing or categorizing a file, validate:
 
 1. **Parent type is valid** — use the "Valid parents" list per docType (vault-defaults.md)
-2. **Zettldex extends parent's** — must be `{parentZettldex}.{subCode}`
+2. **Zettldex extends parent's** — must be `{parentZettldex}.{prefix}`
 3. **rootId matches scope** — the `root` field must match the scope's `scopeId`
 4. **Tags include system tags** — zettldex, rootId, docType must be in tags
 5. **Status is valid** — must be one of the enum values in Section 7, or absent
@@ -237,7 +238,7 @@ description: "{optional short description}"
 creationDate: {dddd Do MMMM YYYY}
 timestamp: {YYYYMMDDHHmmss}
 root: "{scopeId}"
-zettldex: "{parentZettldex}.{subCode}"
+zettldex: "{parentZettldex}.{prefix}"
 docType: {docType}
 tags:
   - "{zettldex}"

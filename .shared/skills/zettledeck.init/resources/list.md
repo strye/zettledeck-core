@@ -40,6 +40,18 @@ These modes read and write `.zettledeck/core/config.json`. They are safe to run 
 
 ---
 
+## Document Type Management Modes
+
+These modes read and write `.zettledeck/core/config.json`. They are safe to run at any time and do not affect skill files.
+
+| Mode | Description |
+|------|-------------|
+| `/zettledeck.init doc-types` | Show all registered document types |
+| `/zettledeck.init add-doc-type` | Add a new document type to the vault |
+| `/zettledeck.init remove-doc-type` | Remove a document type from the vault |
+
+---
+
 ## Utility Modes
 
 | Mode | Description |

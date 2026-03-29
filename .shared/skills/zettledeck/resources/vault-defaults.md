@@ -1,8 +1,8 @@
 # Vault Defaults — Reference Documentation
 
 > **Note:** This file is reference documentation showing the default structure and document types.
-> The actual configuration is stored in `.zettledeck/core/config.json`.
-> To customize your vault, edit that file directly or run `/zettledeck.init core` to use the wizard.
+> The authoritative runtime source is `.zettledeck/core/config.json` — skills read from there, not here.
+> To customize folders or document types, edit config directly or use `/zettledeck.init` modes.
 >
 > **Purpose**: This file documents the default vault structure, document types, folder conventions,
 > and naming patterns. The structural rules in `vault-steering.md` govern how these are applied.
@@ -21,17 +21,19 @@ When disabled, filename pattern: `{scopeId}_{TitleInPascalCase}.md`
 
 ### Core Document Types
 
-| Prefix | docType    | subCode | Description |
-|--------|------------|---------|-------------|
-| `S`    | scope      | S       | Domain anchor; root of the knowledge graph |
-| `F`    | focus      | F       | A thematic area or domain within a scope |
-| `P`    | project    | P       | A defined project with deliverables |
-| `O`    | objective  | O       | A trackable goal, milestone, or task unit |
-| `C`    | content    | C       | A produced piece of writing or document |
-| `M`    | meeting    | M       | Meeting notes, one-time or recurring |
-| `N`    | note       | N       | Miscellaneous notes; use subType: jot for quick capture |
-| `I`    | ideation   | I       | Brainstorming and idea capture |
-| `R`    | research   | R       | Research and analysis notes |
+| Prefix | docType    | Description |
+|--------|------------|-------------|
+| `S`    | scope      | Domain anchor; root of the knowledge graph |
+| `F`    | focus      | A thematic area or domain within a scope |
+| `P`    | project    | A defined project with deliverables |
+| `O`    | objective  | A trackable goal, milestone, or task unit |
+| `C`    | content    | A produced piece of writing or document |
+| `M`    | meeting    | Meeting notes, one-time or recurring |
+| `N`    | note       | Miscellaneous notes; use subType: jot for quick capture |
+| `I`    | ideation   | Brainstorming and idea capture |
+| `R`    | research   | Research and analysis notes |
+
+The `prefix` value is also used directly as the zettldex segment (e.g., `1001.S`, `1001.S.F`).
 
 ---
 
@@ -140,10 +142,10 @@ After determining the parent folder, child docs are placed like this:
 
 **With prefixes enabled:**
 ```
-{subCode}{rootId}_{DocumentTitlePascalCase}
+{prefix}{rootId}_{DocumentTitlePascalCase}
 ```
 
-- `subCode`: single uppercase letter (from the prefix table in Section 1)
+- `prefix`: single uppercase letter (from the `documentTypes` entry in config)
 - `rootId`: the scope's numeric ID — always 4-digit zero-padded (e.g., `0001`, `1001`)
 - `documentTitle`: human title with spaces removed, each word capitalized (PascalCase)
 

@@ -19,6 +19,9 @@ Interactive setup skill that walks users through customizing their ZettleDeck pr
 /zettledeck.init add-folder   → Add a new folder entry to the document repository
 /zettledeck.init remove-folder → Remove a folder entry from the document repository
 /zettledeck.init sync-ids     → Scan the vault and correct all nextId values in config
+/zettledeck.init doc-types    → Show all registered document types from config
+/zettledeck.init add-doc-type → Add a new document type to config
+/zettledeck.init remove-doc-type → Remove a document type from config
 ```
 
 ## How It Works
@@ -84,6 +87,9 @@ Before starting any module init:
 | `add-folder` | utility | Load `resources/add-folder.md` and exit |
 | `remove-folder` | utility | Load `resources/remove-folder.md` and exit |
 | `sync-ids` | utility | Load `resources/sync-ids.md` and exit |
+| `doc-types` | utility | Load `resources/doc-types.md` and exit |
+| `add-doc-type` | utility | Load `resources/add-doc-type.md` and exit |
+| `remove-doc-type` | utility | Load `resources/remove-doc-type.md` and exit |
 
 **Utility modes** (list, folders, add-folder, remove-folder) skip Steps 0 and 3 — load their resource file and follow the instructions there. No pre-flight checks or post-init summary needed.
 
@@ -178,3 +184,6 @@ Available init resources are in the `resources/` subdirectory:
 - [add-folder.md](resources/add-folder.md) — Interactive wizard to add a folder to config
 - [remove-folder.md](resources/remove-folder.md) — Remove a folder entry from config
 - [sync-ids.md](resources/sync-ids.md) — Scan vault and correct all nextId values in config
+- [doc-types.md](resources/doc-types.md) — Display all registered document types
+- [add-doc-type.md](resources/add-doc-type.md) — Interactive wizard to add a document type
+- [remove-doc-type.md](resources/remove-doc-type.md) — Remove a document type from config

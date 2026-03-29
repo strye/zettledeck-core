@@ -26,22 +26,101 @@
     }
   ],
   "scopeSubTypes": {
-    "Resources": [
-      "template",
-      "reference",
-      "admin"
-    ],
-    "Personal": [
-      "general",
-      "health",
-      "finance",
-      "goal"
-    ],
-    "Professional": [
-      "career",
-      "growth",
-      "networking",
-      "goal"
-    ]
-  }
+    "Resources": ["template", "reference", "admin"],
+    "Personal": ["general", "health", "finance", "goal"],
+    "Professional": ["career", "growth", "networking", "goal"]
+  },
+  "documentTypes": [
+    {
+      "docType": "scope",
+      "prefix": "S",
+      "description": "Domain anchor; root of the knowledge graph",
+      "validParents": [],
+      "defaultStatus": "steady",
+      "subTypes": "scopeSubTypes",
+      "placement": { "type": "scope-folder" },
+      "source": "core"
+    },
+    {
+      "docType": "focus",
+      "prefix": "F",
+      "description": "A thematic area or domain within a scope",
+      "validParents": ["scope"],
+      "defaultStatus": "steady",
+      "subTypes": ["ideation", "domain", "research", "vision", "strategy", "wellness", "other"],
+      "placement": { "type": "creates-subfolder", "folder": "1_Foci" },
+      "source": "core"
+    },
+    {
+      "docType": "project",
+      "prefix": "P",
+      "description": "A defined project with deliverables",
+      "validParents": ["scope", "focus"],
+      "defaultStatus": "steady",
+      "subTypes": ["content", "strategy", "forecast", "research", "development", "campaign"],
+      "placement": { "type": "creates-subfolder", "folder": "3_Projects" },
+      "source": "core"
+    },
+    {
+      "docType": "objective",
+      "prefix": "O",
+      "description": "A trackable goal, milestone, or task unit",
+      "validParents": ["scope", "focus", "project", "content"],
+      "defaultStatus": null,
+      "subTypes": ["smart", "milestone", "todo", "create", "research", "poc", "learn", "improve", "behavior", "other"],
+      "placement": { "type": "creates-subfolder", "folder": "2_Objectives" },
+      "source": "core"
+    },
+    {
+      "docType": "content",
+      "prefix": "C",
+      "description": "A produced piece of writing, document, or creative output",
+      "validParents": ["scope", "focus", "project", "content"],
+      "defaultStatus": "active",
+      "subTypes": ["narrative", "brief", "presentation", "plan", "review", "strategy", "roadmap", "requirements", "spec", "design", "forecast", "guide", "paper", "post"],
+      "placement": { "type": "creates-subfolder", "folder": "5_Content" },
+      "source": "core"
+    },
+    {
+      "docType": "meeting",
+      "prefix": "M",
+      "description": "Meeting notes, one-time or recurring",
+      "validParents": ["scope", "focus", "project", "objective"],
+      "defaultStatus": "na",
+      "subTypes": ["customer", "team", "workshop", "training", "ideation", "loop", "admin", "personal"],
+      "placement": { "type": "flat-in-subfolder", "folder": "4_Meetings" },
+      "extraFrontmatter": ["freqType", "freq", "start", "end", "time"],
+      "source": "core"
+    },
+    {
+      "docType": "note",
+      "prefix": "N",
+      "description": "Miscellaneous notes; use subType: jot for quick capture",
+      "validParents": ["scope", "focus", "project", "objective", "content", "meeting"],
+      "defaultStatus": "na",
+      "subTypes": ["note", "jot", "draft", "tasks", "research", "meeting", "contact"],
+      "placement": { "type": "same-folder" },
+      "source": "core"
+    },
+    {
+      "docType": "ideation",
+      "prefix": "I",
+      "description": "Brainstorming and idea capture",
+      "validParents": ["scope", "focus", "project", "objective", "content"],
+      "defaultStatus": "na",
+      "subTypes": ["general", "research", "professional"],
+      "placement": { "type": "named-subfolder", "folder": "Ideation" },
+      "source": "core"
+    },
+    {
+      "docType": "research",
+      "prefix": "R",
+      "description": "Research and analysis notes",
+      "validParents": ["scope", "focus", "project", "objective", "content"],
+      "defaultStatus": "active",
+      "subTypes": ["domain", "strategic", "foundational", "framing"],
+      "placement": { "type": "same-folder" },
+      "source": "core"
+    }
+  ]
 }
