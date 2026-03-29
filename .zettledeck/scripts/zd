@@ -243,7 +243,90 @@ install_module_assets() {
         done
     fi
 
+    # Copy init-steps.md to .zettledeck/{module-name}/init-steps.md
+    if [[ -f "${module_dir}/init-steps.md" ]]; then
+        local init_target_dir="${CONFIG_DIR}/${module_name}"
+        mkdir -p "$init_target_dir"
+        local init_target="${init_target_dir}/init-steps.md"
+        if [[ ! -f "$init_target" ]]; then
+            cp "${module_dir}/init-steps.md" "$init_target"
+            log_info "  Installed init-steps: ${module_name}/init-steps.md"
+            ((installed++))
+        else
+            log_info "  init-steps for ${module_name} already exists. Skipping."
+        fi
+    fi
+
+    # Merge doc-types.json into .zettledeck/core/config.json
+    if [[ -f "${module_dir}/doc-types.json" ]]; then
+        merge_doc_types "${module_dir}/doc-types.json" "$module_name" "install"
+    fi
+
     echo "$installed"
+}
+
+# Merge document types from a module's doc-types.json into core config.json
+# Mode "install": skip types that already exist (additive only)
+# Mode "update":  overwrite types whose source matches module_name; skip "custom"
+merge_doc_types() {
+    local doc_types_file="$1"
+    local module_name="$2"
+    local mode="$3"
+    local core_config="${CONFIG_DIR}/core/config.json"
+
+    if [[ ! -f "$core_config" ]]; then
+        log_warn "  core/config.json not found — skipping doc-types merge for ${module_name}."
+        log_warn "  Run '/zettledeck.init core' first, then re-run 'zd install'."
+        return
+    fi
+
+    local type_count
+    type_count=$(yq '.documentTypes | length' "$doc_types_file")
+
+    for ((t=0; t<type_count; t++)); do
+        local doc_type
+        doc_type=$(yq ".documentTypes[$t].docType" "$doc_types_file")
+
+        # Check if this docType already exists in config
+        local existing_source
+        existing_source=$(yq ".documentTypes[] | select(.docType == \"${doc_type}\") | .source" "$core_config" 2>/dev/null || true)
+
+        if [[ "$mode" == "install" ]]; then
+            if [[ -n "$existing_source" && "$existing_source" != "null" ]]; then
+                log_info "  Doc type '${doc_type}' already registered (source: ${existing_source}). Skipping."
+                continue
+            fi
+            # Extract the full type object and append it to config
+            local type_json
+            type_json=$(yq -o=json ".documentTypes[$t]" "$doc_types_file")
+            yq -i ".documentTypes += [${type_json}]" "$core_config"
+            log_ok "  Registered doc type: ${doc_type} (source: ${module_name})"
+
+        elif [[ "$mode" == "update" ]]; then
+            if [[ "$existing_source" == "custom" ]]; then
+                log_info "  Doc type '${doc_type}' is custom — skipping (user owns it)."
+                continue
+            fi
+            if [[ -n "$existing_source" && "$existing_source" != "$module_name" ]]; then
+                log_info "  Doc type '${doc_type}' is owned by '${existing_source}' — skipping."
+                continue
+            fi
+            if [[ -z "$existing_source" || "$existing_source" == "null" ]]; then
+                # Not present yet — add it
+                local type_json
+                type_json=$(yq -o=json ".documentTypes[$t]" "$doc_types_file")
+                yq -i ".documentTypes += [${type_json}]" "$core_config"
+                log_ok "  Registered doc type: ${doc_type} (source: ${module_name})"
+            else
+                # Owned by this module — replace it
+                local type_json
+                type_json=$(yq -o=json ".documentTypes[$t]" "$doc_types_file")
+                yq -i "del(.documentTypes[] | select(.docType == \"${doc_type}\"))" "$core_config"
+                yq -i ".documentTypes += [${type_json}]" "$core_config"
+                log_info "  Updated doc type: ${doc_type} (source: ${module_name})"
+            fi
+        fi
+    done
 }
 
 # ─── Commands ───────────────────────────────────────────────────────────────
@@ -377,6 +460,19 @@ cmd_update() {
                 chmod +x "${CONFIG_DIR}/scripts/${script_name}"
                 log_info "  Updated script: ${script_name}"
             done
+        fi
+
+        # Update init-steps.md (always overwrite — it's module-owned content)
+        if [[ -f "${clone_dir}/init-steps.md" ]]; then
+            local init_target_dir="${CONFIG_DIR}/${name}"
+            mkdir -p "$init_target_dir"
+            cp "${clone_dir}/init-steps.md" "${init_target_dir}/init-steps.md"
+            log_info "  Updated init-steps: ${name}/init-steps.md"
+        fi
+
+        # Merge doc-types (update mode: overwrite module-owned types, skip custom)
+        if [[ -f "${clone_dir}/doc-types.json" ]]; then
+            merge_doc_types "${clone_dir}/doc-types.json" "$name" "update"
         fi
 
         # Scaffold project-root directories (non-destructive — never overwrite user content)
@@ -657,6 +753,28 @@ cmd_status() {
         fi
     else
         echo -e "  ${YELLOW}No init-state.yml found. Run 'zd install' or '/zettledeck.init' to create it.${NC}"
+    fi
+
+    # Document types by source
+    echo ""
+    log_info "Document Types (.zettledeck/core/config.json):"
+    local core_config="${CONFIG_DIR}/core/config.json"
+    if [[ -f "$core_config" ]]; then
+        local dt_count
+        dt_count=$(yq '.documentTypes | length' "$core_config" 2>/dev/null || echo "0")
+        if [[ "$dt_count" -gt 0 ]]; then
+            for ((d=0; d<dt_count; d++)); do
+                local dt_name dt_source dt_prefix
+                dt_name=$(yq ".documentTypes[$d].docType" "$core_config")
+                dt_source=$(yq ".documentTypes[$d].source" "$core_config")
+                dt_prefix=$(yq ".documentTypes[$d].prefix" "$core_config")
+                echo -e "  ${GREEN}${dt_prefix}  ${dt_name}${NC}  (${dt_source})"
+            done
+        else
+            echo "  (none — run '/zettledeck.init core' to configure)"
+        fi
+    else
+        echo -e "  ${YELLOW}core/config.json not found${NC}"
     fi
 
     # Tool wiring

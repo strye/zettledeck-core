@@ -82,43 +82,12 @@
       "source": "core"
     },
     {
-      "docType": "meeting",
-      "prefix": "M",
-      "description": "Meeting notes, one-time or recurring",
-      "validParents": ["scope", "focus", "project", "objective"],
-      "defaultStatus": "na",
-      "subTypes": ["customer", "team", "workshop", "training", "ideation", "loop", "admin", "personal"],
-      "placement": { "type": "flat-in-subfolder", "folder": "4_Meetings" },
-      "extraFrontmatter": ["freqType", "freq", "start", "end", "time"],
-      "source": "core"
-    },
-    {
       "docType": "note",
       "prefix": "N",
       "description": "Miscellaneous notes; use subType: jot for quick capture",
       "validParents": ["scope", "focus", "project", "objective", "content", "meeting"],
       "defaultStatus": "na",
       "subTypes": ["note", "jot", "draft", "tasks", "research", "meeting", "contact"],
-      "placement": { "type": "same-folder" },
-      "source": "core"
-    },
-    {
-      "docType": "ideation",
-      "prefix": "I",
-      "description": "Brainstorming and idea capture",
-      "validParents": ["scope", "focus", "project", "objective", "content"],
-      "defaultStatus": "na",
-      "subTypes": ["general", "research", "professional"],
-      "placement": { "type": "named-subfolder", "folder": "Ideation" },
-      "source": "core"
-    },
-    {
-      "docType": "research",
-      "prefix": "R",
-      "description": "Research and analysis notes",
-      "validParents": ["scope", "focus", "project", "objective", "content"],
-      "defaultStatus": "active",
-      "subTypes": ["domain", "strategic", "foundational", "framing"],
       "placement": { "type": "same-folder" },
       "source": "core"
     }
