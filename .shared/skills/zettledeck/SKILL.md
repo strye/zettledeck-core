@@ -44,7 +44,7 @@ Key values used by this skill:
 
 | Key | Purpose |
 |-----|---------|
-| `documentRepo` | Name of the permanent storage folder (default: `Reliquary`) |
+| `workspaceFolders` | Active working areas at the vault root; role-keyed; note skill reads enabled entries; entry with `role: "documentRepo"` provides the repository folder name |
 | `scopeMethod` | `assignedRanges` or `incremental` |
 | `repositoryFolders` | Internal folder structure of the document repository (scope ID ranges) |
 | `prefixesEnabled` | Whether filenames use single-letter type prefixes |
@@ -54,7 +54,7 @@ Key values used by this skill:
 ## Boundaries
 
 **Always:**
-- Read `documentRepo` from config before any promote operation — never hardcode the folder name
+- Resolve the repository folder at runtime: find the `workspaceFolders` entry where `role == "documentRepo"` and read its `folder` field. If not found, stop and tell the user.
 - Follow recommend-first — propose before executing
 - Preserve existing frontmatter when modifying documents
 
@@ -65,4 +65,4 @@ Key values used by this skill:
 
 **Never:**
 - Move a file without user confirmation
-- Hardcode `Reliquary` — always use `documentRepo` from config
+- Hardcode any folder name — always resolve via `workspaceFolders` roles

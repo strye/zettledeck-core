@@ -1,34 +1,97 @@
 ---
 mode: add-folder
-description: Interactive wizard to add a new folder entry to the document repository config
+description: Interactive wizard to add a folder to workspace or repository config
 ---
 
 # Add Folder
 
 All changes write to `.zettledeck/core/config.json`. Skill files are never modified.
 
+Two folder types exist — determine which the user intends:
+
+- `--workspace` — a root-level working area (goes into `workspaceFolders`)
+- `--repo` — an internal partition inside the document repository (goes into `repositoryFolders`)
+
+If no flag is provided, ask:
+> "Are you adding a workspace folder (a root-level working area like Atelier or Chrysalis) or a repository folder (an internal partition inside your document repository)?"
+
 ---
 
-## Steps
+## add-folder --workspace
 
 ### Step 1 — Pre-flight
 
 1. Read `.zettledeck/core/config.json`
 2. If the file does not exist, tell the user: "No config found. Run `/zettledeck.init core` first."
-3. Note the current `scopeMethod` — it determines which questions to ask
 
 ### Step 2 — Gather folder details
 
-Ask the following questions in order. Use recommend-first: propose a value, wait for approval.
+**Question 1 — Folder name**
+"What is the name of this workspace folder? (e.g., `Foundry/`, `Nexus/`)"
+
+**Question 2 — Role**
+"What role should this folder have? The role is a stable identifier used by skills — lowercase, no spaces, no slashes. (e.g., `foundry`, `nexus`)"
+
+- Suggest a slugified default from the folder name (strip trailing `/`, lowercase, replace spaces with `-`)
+- Validate: role must be unique across existing `workspaceFolders` entries
+
+**Question 3 — Description**
+"Brief description of what this folder is for?"
+
+### Step 3 — Confirm
+
+```
+New Workspace Folder
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Folder:       {folder}
+Role:         {role}
+Description:  {description}
+Source:       custom
+Enabled:      true
+```
+
+Ask: "Shall I add this to your config?"
+
+### Step 4 — Write
+
+Append to `workspaceFolders` in `.zettledeck/core/config.json`:
+
+```json
+{
+  "folder": "{folder}",
+  "role": "{role}",
+  "description": "{description}",
+  "source": "custom",
+  "enabled": true
+}
+```
+
+Rewrite the complete file — do not attempt a partial edit.
+
+### Step 5 — Confirm
+
+> "Workspace folder added. Run `/zettledeck.init folders` to see your updated structure."
+>
+> **Note:** This adds the entry to your config. Create the actual folder in your vault manually, or ask me to create it.
+
+---
+
+## add-folder --repo
+
+### Step 1 — Pre-flight
+
+1. Read `.zettledeck/core/config.json`
+2. If the file does not exist, tell the user: "No config found. Run `/zettledeck.init core` first."
+3. Note the current `scopeMethod` — it determines whether to ask range questions
+
+### Step 2 — Gather folder details
 
 **Question 1 — Theme**
 "What is the theme or purpose of this folder? (e.g., 'Community involvement', 'Side projects')"
 
 **Question 2 — Folder path**
-"What is the folder path? This can be a top-level folder or a subfolder of an existing one."
+"What is the folder path inside the repository? (e.g., `30_Community/`, `20_Professional/21_Career`)"
 
-- Top-level example: `30_Community/`
-- Subfolder example: `20_Professional/21_Career`
 - Suggest using the numeric prefix pattern (`30_`, `21_`, etc.) for consistency, but do not require it
 
 **Question 3 — Range (assignedRanges only)**
@@ -37,18 +100,16 @@ Skip this question if `scopeMethod` is `incremental`.
 
 "What scope ID range should this folder own?"
 
-- Derive a suggestion from the numeric prefix if the folder follows the pattern (e.g., `30_` → 3000–3999, `21_` → 2100–2199)
+- Derive a suggestion from the numeric prefix if the folder follows the pattern (e.g., `30_` → 3000–3999)
 - Show the suggestion: "Based on your prefix, I'd suggest range **3000–3999**. Does that work, or would you like a custom range?"
 - Validate: the proposed range must not overlap with any existing `rangeStart`/`rangeEnd` in `repositoryFolders`
-- If overlap detected, show which folder owns that range and ask the user to choose a different range
+- If overlap detected, show which folder owns that range and ask for a different range
 - Set `nextId` to `rangeStart`
 
 ### Step 3 — Confirm
 
-Show a summary before writing:
-
 ```
-New Folder Entry
+New Repository Folder
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Theme:       {theme}
 Folder:      {folder}
@@ -60,7 +121,7 @@ Ask: "Shall I add this to your config?"
 
 ### Step 4 — Write
 
-Append the new entry to `repositoryFolders` in `.zettledeck/core/config.json`.
+Append to `repositoryFolders` in `.zettledeck/core/config.json`.
 
 **assignedRanges entry:**
 ```json
@@ -81,10 +142,10 @@ Append the new entry to `repositoryFolders` in `.zettledeck/core/config.json`.
 }
 ```
 
-Write the full updated config.json — do not mutate only the array; rewrite the complete file to avoid JSON corruption.
+Rewrite the complete file — do not attempt a partial edit.
 
-### Step 5 — Confirm and suggest next steps
+### Step 5 — Confirm
 
-> "Folder added. Run `/zettledeck.init folders` to see your updated structure."
+> "Repository folder added. Run `/zettledeck.init folders` to see your updated structure."
 >
-> **Note:** This adds the entry to your config. Create the actual folder in your vault manually, or ask me to create it.
+> **Note:** This adds the entry to your config. Create the actual folder inside your document repository manually, or ask me to create it.

@@ -56,7 +56,7 @@ Content workshop where ideas get shaped into finished artifacts. Files here pick
 Knowledge intelligence space — where vault analysis, idea surfacing, and reflective thinking produce artifacts. This is the convergence point for cross-domain connections, contradiction detection, trend analysis, and skill identification. Content here is the output of looking across the vault and finding what's hidden in the patterns: implicit ideas, evolving beliefs, and opportunities for synthesis.
 
 ### Document Repository
-Core content management storage. The long-term home for finished, structured knowledge. This is the permanent collection — everything that lives here has full ZettleDeck structure (scope, zettldex, frontmatter, placement). The folder name defaults to `Reliquary` but is configurable via `documentRepo` in `.zettledeck/core/config.json`.
+Core content management storage. The long-term home for finished, structured knowledge. This is the permanent collection — everything that lives here has full ZettleDeck structure (scope, zettldex, frontmatter, placement). The folder name defaults to `Reliquary` but is configurable — update the `folder` field of the `workspaceFolders` entry with `role: "documentRepo"` in `.zettledeck/core/config.json`.
 
 ### Scriptorium
 Space for analyzing and crafting smaller responses — emails, Slack messages, and other correspondence that needs thought but not the full Foundry treatment. Provided by the Praxis module alongside the Praxis workspace.

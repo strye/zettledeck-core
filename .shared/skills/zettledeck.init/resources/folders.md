@@ -1,6 +1,6 @@
 ---
 mode: folders
-description: Displays the current top-level folder structure from config
+description: Displays the current workspace and repository folder structure from config
 ---
 
 # Folders — Current Configuration
@@ -9,41 +9,36 @@ description: Displays the current top-level folder structure from config
 
 1. Read `.zettledeck/core/config.json`
 2. If the file does not exist, tell the user: "No config found. Run `/zettledeck.init core` to set up your vault first."
-3. Display the folder structure in a readable table (see format below)
+3. Display both folder tables (see format below)
 4. Note the active `scopeMethod` so the user understands whether ranges are relevant
 
 ---
 
 ## Display Format
 
-### assignedRanges
+Display workspace folders first, then repository folders.
 
 ```
-Document Repository: {documentRepo}
-Scope Method:        assignedRanges
+Workspace Folders
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ #  Folder        Role           Enabled  Description
+ 1  Atelier/      jots           yes      A place for quick notes and capturing ideas
+ 2  Chrysalis/    ideation       yes      A place to expand and incubate ideas
+ 3  Reliquary/    documentRepo   yes      Permanent document repository  [required]
 
-Top-Level Folders
+Repository Folders  (inside {documentRepo folder})
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Scope Method: assignedRanges
+
  #  Folder                       Range        Next ID  Theme
  1  00_Resources/                0000–0999    0000     Templates, admin, vault docs
  2  10_Personal/                 1000–1999    1000     Personal focuses and projects
  3  20_Professional/             2000–2999    2000     Professional focuses and projects
 ```
 
-### incremental
+For `incremental` scopeMethod, omit Range/Next ID columns from the Repository Folders table and show `Next ID: {nextId}` as a header line instead.
 
-```
-Document Repository: {documentRepo}
-Scope Method:        incremental
-Next ID:             {nextId}
-
-Top-Level Folders
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- #  Folder                  Theme
- 1  00_Resources/           Templates, admin, vault docs
- 2  10_Personal/            Personal focuses and projects
- 3  20_Professional/        Professional focuses and projects
-```
+Mark entries with `required: true` with `[required]`. Mark entries with `enabled: false` with `[disabled]`.
 
 ---
 
@@ -51,5 +46,6 @@ Top-Level Folders
 
 Suggest next actions:
 
-> "To add a folder: `/zettledeck.init add-folder`"
+> "To add a workspace folder: `/zettledeck.init add-folder --workspace`"
+> "To add a repository folder: `/zettledeck.init add-folder --repo`"
 > "To remove a folder: `/zettledeck.init remove-folder`"

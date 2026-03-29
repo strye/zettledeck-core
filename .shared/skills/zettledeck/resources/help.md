@@ -61,7 +61,7 @@ YAML front-matter encodes type, position, lineage, status, and tags — making t
 - "How do I set up my vault?"
   → Run `/zettledeck.init core`.
 - "What is my document repo folder called?"
-  → Check `documentRepo` in `.zettledeck/core/config.json`. Default is `Reliquary`.
+  → Find the entry in `workspaceFolders` where `role == "documentRepo"` and read its `folder` field. Default is `Reliquary/`.
 
 ---
 
@@ -74,6 +74,6 @@ When users ask about workspace folders, reference `resources/the-way.md`. Key po
 - **Praxis** — operational backbone: diary, tasks, priorities.
 - **Foundry** — content workshop. Ideas get shaped into finished artifacts.
 - **Nexus** — vault intelligence. Looks inward at patterns and connections.
-- **Document repo** (`documentRepo` in config) — permanent vault storage. Final destination for structured knowledge. Default name: Reliquary.
+- **Document repo** (role: `documentRepo` in `workspaceFolders`) — permanent vault storage. Final destination for structured knowledge. Default folder name: `Reliquary/`.
 - **Scriptorium** — correspondence and shorter-form responses.
 - **Tesseract** — active research space.

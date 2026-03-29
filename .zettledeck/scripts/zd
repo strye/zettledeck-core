@@ -276,76 +276,120 @@ install_module_assets() {
         fi
     fi
 
-    # Merge doc-types.json into .zettledeck/core/config.json
+    # Deprecation check — doc-types.json replaced by module-config.json
     if [[ -f "${module_dir}/doc-types.json" ]]; then
-        merge_doc_types "${module_dir}/doc-types.json" "$module_name" "install"
+        log_warn "  doc-types.json is deprecated — migrate to module-config.json. Skipping."
+    fi
+
+    # Merge module configuration into .zettledeck/core/config.json
+    if [[ -f "${module_dir}/module-config.json" ]]; then
+        merge_config "${module_dir}/module-config.json" "$module_name" "install"
     fi
 
     echo "$installed"
 }
 
-# Merge document types from a module's doc-types.json into core config.json
-# Mode "install": skip types that already exist (additive only)
-# Mode "update":  overwrite types whose source matches module_name; skip "custom"
-merge_doc_types() {
-    local doc_types_file="$1"
+# Merge module configuration sections from module-config.json into core config.json.
+#
+# module-config.json declares one object per config section, each with:
+#   mergeKey:          field that uniquely identifies an entry (e.g. "docType", "role")
+#   preserveUserFields: fields zd never overwrites on update (e.g. "enabled", "folder")
+#   entries:           array of objects to merge into the matching config section
+#
+# Mode "install": additive only — skip entries already registered (any source)
+# Mode "update":  replace module-owned entries; skip "custom"; preserve user fields
+merge_config() {
+    local module_config_file="$1"
     local module_name="$2"
     local mode="$3"
     local core_config="${CONFIG_DIR}/core/config.json"
 
     if [[ ! -f "$core_config" ]]; then
-        log_warn "  core/config.json not found — skipping doc-types merge for ${module_name}."
+        log_warn "  core/config.json not found — skipping config merge for ${module_name}."
         log_warn "  Run '/zettledeck.init core' first, then re-run 'zd install'."
         return
     fi
 
-    local type_count
-    type_count=$(yq '.documentTypes | length' "$doc_types_file")
+    # Enumerate top-level section keys declared in module-config.json
+    local sections
+    sections=$(yq 'keys | .[]' "$module_config_file")
 
-    for ((t=0; t<type_count; t++)); do
-        local doc_type
-        doc_type=$(yq ".documentTypes[$t].docType" "$doc_types_file")
+    while IFS= read -r section; do
+        [[ -z "$section" ]] && continue
 
-        # Check if this docType already exists in config
-        local existing_source
-        existing_source=$(yq ".documentTypes[] | select(.docType == \"${doc_type}\") | .source" "$core_config" 2>/dev/null || true)
+        local merge_key entry_count preserve_fields
+        merge_key=$(yq ".$section.mergeKey" "$module_config_file")
+        entry_count=$(yq ".$section.entries | length" "$module_config_file")
+        preserve_fields=$(yq ".$section.preserveUserFields // [] | .[]" "$module_config_file" 2>/dev/null || true)
 
-        if [[ "$mode" == "install" ]]; then
-            if [[ -n "$existing_source" && "$existing_source" != "null" ]]; then
-                log_info "  Doc type '${doc_type}' already registered (source: ${existing_source}). Skipping."
-                continue
-            fi
-            # Extract the full type object and append it to config
-            local type_json
-            type_json=$(yq -o=json ".documentTypes[$t]" "$doc_types_file")
-            yq -i ".documentTypes += [${type_json}]" "$core_config"
-            log_ok "  Registered doc type: ${doc_type} (source: ${module_name})"
+        for ((t=0; t<entry_count; t++)); do
+            local entry_key_val existing_source entry_json
+            entry_key_val=$(yq ".$section.entries[$t].$merge_key" "$module_config_file")
+            existing_source=$(yq ".$section[] | select(.$merge_key == \"${entry_key_val}\") | .source" \
+                "$core_config" 2>/dev/null || true)
 
-        elif [[ "$mode" == "update" ]]; then
-            if [[ "$existing_source" == "custom" ]]; then
-                log_info "  Doc type '${doc_type}' is custom — skipping (user owns it)."
-                continue
+            if [[ "$mode" == "install" ]]; then
+                if [[ -n "$existing_source" && "$existing_source" != "null" ]]; then
+                    log_info "  [$section] '${entry_key_val}' already registered (source: ${existing_source}). Skipping."
+                    continue
+                fi
+                entry_json=$(yq -o=json ".$section.entries[$t]" "$module_config_file")
+                yq -i ".$section += [${entry_json}]" "$core_config"
+                log_ok "  [$section] Registered '${entry_key_val}' (source: ${module_name})"
+
+            elif [[ "$mode" == "update" ]]; then
+                if [[ "$existing_source" == "custom" ]]; then
+                    log_info "  [$section] '${entry_key_val}' is custom — skipping (user owns it)."
+                    continue
+                fi
+                if [[ -n "$existing_source" && "$existing_source" != "null" && \
+                      "$existing_source" != "$module_name" ]]; then
+                    log_info "  [$section] '${entry_key_val}' owned by '${existing_source}' — skipping."
+                    continue
+                fi
+
+                entry_json=$(yq -o=json ".$section.entries[$t]" "$module_config_file")
+
+                if [[ -z "$existing_source" || "$existing_source" == "null" ]]; then
+                    yq -i ".$section += [${entry_json}]" "$core_config"
+                    log_ok "  [$section] Registered '${entry_key_val}' (source: ${module_name})"
+                else
+                    # Save user-owned field values to a temp file before replacing the entry.
+                    # Tab-delimited: field<TAB>value — one per line.
+                    local preserve_tmpfile
+                    preserve_tmpfile=$(mktemp)
+
+                    while IFS= read -r field; do
+                        [[ -z "$field" ]] && continue
+                        local fval
+                        fval=$(yq ".$section[] | select(.$merge_key == \"${entry_key_val}\") | .$field" \
+                            "$core_config" 2>/dev/null || true)
+                        [[ -n "$fval" && "$fval" != "null" ]] && printf '%s\t%s\n' "$field" "$fval" >> "$preserve_tmpfile"
+                    done <<< "$preserve_fields"
+
+                    # Replace the entry
+                    yq -i "del(.$section[] | select(.$merge_key == \"${entry_key_val}\"))" "$core_config"
+                    yq -i ".$section += [${entry_json}]" "$core_config"
+
+                    # Restore user-owned fields.
+                    # Booleans and numbers are written as literals; strings are quoted.
+                    while IFS=$'\t' read -r field fval; do
+                        if [[ "$fval" =~ ^(true|false|[0-9]+([.][0-9]+)?)$ ]]; then
+                            yq -i "(.$section[] | select(.$merge_key == \"${entry_key_val}\") | .$field) = ${fval}" \
+                                "$core_config"
+                        else
+                            yq -i "(.$section[] | select(.$merge_key == \"${entry_key_val}\") | .$field) = \"${fval}\"" \
+                                "$core_config"
+                        fi
+                    done < "$preserve_tmpfile"
+                    rm -f "$preserve_tmpfile"
+
+                    log_info "  [$section] Updated '${entry_key_val}' (source: ${module_name})"
+                fi
             fi
-            if [[ -n "$existing_source" && "$existing_source" != "$module_name" ]]; then
-                log_info "  Doc type '${doc_type}' is owned by '${existing_source}' — skipping."
-                continue
-            fi
-            if [[ -z "$existing_source" || "$existing_source" == "null" ]]; then
-                # Not present yet — add it
-                local type_json
-                type_json=$(yq -o=json ".documentTypes[$t]" "$doc_types_file")
-                yq -i ".documentTypes += [${type_json}]" "$core_config"
-                log_ok "  Registered doc type: ${doc_type} (source: ${module_name})"
-            else
-                # Owned by this module — replace it
-                local type_json
-                type_json=$(yq -o=json ".documentTypes[$t]" "$doc_types_file")
-                yq -i "del(.documentTypes[] | select(.docType == \"${doc_type}\"))" "$core_config"
-                yq -i ".documentTypes += [${type_json}]" "$core_config"
-                log_info "  Updated doc type: ${doc_type} (source: ${module_name})"
-            fi
-        fi
-    done
+        done
+
+    done <<< "$sections"
 }
 
 # ─── Commands ───────────────────────────────────────────────────────────────
@@ -489,9 +533,14 @@ cmd_update() {
             log_info "  Updated init-steps: ${name}/init-steps.md"
         fi
 
-        # Merge doc-types (update mode: overwrite module-owned types, skip custom)
+        # Deprecation check — doc-types.json replaced by module-config.json
         if [[ -f "${clone_dir}/doc-types.json" ]]; then
-            merge_doc_types "${clone_dir}/doc-types.json" "$name" "update"
+            log_warn "  doc-types.json is deprecated — migrate to module-config.json. Skipping."
+        fi
+
+        # Merge module configuration (update mode: replace module-owned, skip custom)
+        if [[ -f "${clone_dir}/module-config.json" ]]; then
+            merge_config "${clone_dir}/module-config.json" "$name" "update"
         fi
 
         # Scaffold project-root directories (non-destructive — never overwrite user content)

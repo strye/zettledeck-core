@@ -208,10 +208,10 @@ Configure in `.zettledeck/core/config.json` via `scopeMethod`.
 
 Core vault configuration is stored in `.zettledeck/core/config.json`:
 
-- **documentRepo** — Name of the permanent storage folder (default: `Reliquary`; rename-safe)
+- **workspaceFolders** — Active working areas at the vault root (Atelier, Chrysalis, Reliquary, etc.). Role-keyed — skills resolve folder names via `role`, so physical folders can be renamed freely. The entry with `role: "documentRepo"` locates the permanent storage folder. Modules register entries at install time; users manage entries via `/zettledeck.init add-folder --workspace`.
 - **scopeMethod** — `assignedRanges` or `incremental`
-- **repositoryFolders** — Internal folder structure of the document repository (with ranges if using assignedRanges)
-- **scopeSubTypes** — What kinds of scopes live in each folder
+- **repositoryFolders** — Internal folder structure *inside* the document repository (with ranges if using assignedRanges). Distinct from workspace folders — these are partitions within the Reliquary, not root folders.
+- **scopeSubTypes** — What kinds of scopes live in each repository folder
 - **prefixesEnabled** — Whether to use single-letter prefixes on filenames (e.g., `P1001_ProjectName`)
 
 Edit this file directly, or run `/zettledeck.init core` to walk through the setup wizard.

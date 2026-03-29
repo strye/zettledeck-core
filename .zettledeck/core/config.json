@@ -1,5 +1,4 @@
 {
-  "documentRepo": "Reliquary",
   "prefixesEnabled": true,
   "scopeMethod": "assignedRanges",
   "repositoryFolders": [
@@ -24,6 +23,11 @@
       "rangeEnd": 2999,
       "nextId": 2000
     }
+  ],
+  "workspaceFolders": [
+    { "folder": "Atelier/",   "role": "jots",        "description": "A place for quick notes and capturing ideas", "source": "core", "enabled": true },
+    { "folder": "Chrysalis/", "role": "ideation",     "description": "A place to expand and incubate ideas",       "source": "core", "enabled": true },
+    { "folder": "Reliquary/", "role": "documentRepo", "description": "Permanent document repository",              "source": "core", "required": true, "enabled": true }
   ],
   "scopeSubTypes": {
     "Resources": ["template", "reference", "admin"],

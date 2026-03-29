@@ -37,9 +37,27 @@ The `prefix` value is also used directly as the zettldex segment (e.g., `1001.S`
 
 ---
 
-## 2. Repository Folder Structure
+## 2. Workspace Folders
 
-Configured via `repositoryFolders` in `.zettledeck/core/config.json`.
+Configured via `workspaceFolders` in `.zettledeck/core/config.json`. These are the active working areas at the vault root where in-progress notes are created. Each entry has a stable `role` identifier used by skills — physical folder names can be renamed by the user without breaking skill behavior.
+
+| Role | Default Folder | Description |
+|------|---------------|-------------|
+| `jots` | `Atelier/` | Quick notes and idea capture |
+| `ideation` | `Chrysalis/` | Expanding and incubating ideas |
+| `documentRepo` | `Reliquary/` | Permanent document repository (promote destination) |
+
+**Role resolution:** Skills resolve folder names at runtime via role. To find the repository: look up `role: "documentRepo"` in `workspaceFolders`. The `required: true` flag on that entry signals it must always be present.
+
+**`enabled` field:** Set `enabled: false` on any entry to exclude it from note creation flows. The `documentRepo` entry cannot be disabled — it is required for promote operations.
+
+Modules register additional workspace folders at install time via `module-config.json`. Users can add custom entries via `/zettledeck.init add-folder --workspace`.
+
+---
+
+## 3. Repository Folder Structure
+
+Configured via `repositoryFolders` in `.zettledeck/core/config.json`. These are the internal organizational partitions *inside* the document repository — not workspace root folders.
 
 | Content theme | Top-level folder |
 |--------------|-----------------|
@@ -49,7 +67,7 @@ Configured via `repositoryFolders` in `.zettledeck/core/config.json`.
 
 ---
 
-## 3. Document Type Details
+## 4. Document Type Details
 
 ### scope
 - **Purpose**: Domain anchor and root of the knowledge graph. One scope document per domain. Links all related focuses, projects, and documents via scopeId regardless of where they live in the vault.
@@ -116,7 +134,7 @@ Configured via `repositoryFolders` in `.zettledeck/core/config.json`.
 
 ---
 
-## 4. Child Document Placement
+## 5. Child Document Placement
 
 After determining the parent folder, child docs are placed like this:
 
@@ -136,7 +154,7 @@ After determining the parent folder, child docs are placed like this:
 
 ---
 
-## 5. File Naming Rules
+## 6. File Naming Rules
 
 ### Standard documents
 

@@ -2,7 +2,7 @@
 
 Promotes content from workspaces (Atelier, Chrysalis, Foundry, etc.) into the document repository with full ZettleDeck structure. This is the moment scope is assigned, zettldex address determined, frontmatter completed, and placement within the repo decided.
 
-Before starting, read `documentRepo` from `.zettledeck/core/config.json`. This is the destination folder for all promoted content (default: `Reliquary`). Use this value — not the hardcoded name — everywhere below.
+Before starting, resolve the document repository folder: find the entry in `workspaceFolders` (in `.zettledeck/core/config.json`) where `role == "documentRepo"` and read its `folder` field. This is the destination for all promoted content. If no such entry exists, stop and tell the user: "No documentRepo role found in workspaceFolders — check your .zettledeck/core/config.json."
 
 ---
 
@@ -43,7 +43,7 @@ Scope:        {existing scope name (ID)} or "New scope — {proposed name}"
 ScopeId:      {assigned ID}
 Zettldex:     {derived address}
 Parent:       {parent file} or "Standalone under scope"
-Destination:  {documentRepo}/{placement path}
+Destination:  {repositoryFolder}/{placement path}
 Filename:     {PrefixId_Title.md}
 ```
 
@@ -62,7 +62,7 @@ After confirmation:
 
 1. Read `vault-steering.md` to generate correct front-matter
 2. Write updated frontmatter to the document
-3. Move the file to its destination path inside `{documentRepo}`
+3. Move the file to its destination path inside `{repositoryFolder}`
 4. If a new scope was created: create the scope document first, then place this document under it
 5. If `scopeMethod: assignedRanges`: increment `nextId` for the appropriate folder in `.zettledeck/core/config.json`
 6. If `scopeMethod: incremental`: increment top-level `nextId` in `.zettledeck/core/config.json`

@@ -18,17 +18,27 @@ All ZettleDeck core configuration lives in `.zettledeck/core/config.json`. This 
 
 **Config file location:** `.zettledeck/core/config.json`
 
+> **Two types of folders — don't confuse them:**
+>
+> `workspaceFolders` — Active working areas at the vault root (Atelier, Chrysalis, etc.). Role-keyed so physical names can be renamed without breaking skills. The entry with `role: "documentRepo"` locates the permanent repository. This is what the note skill reads. Modules register entries at install time; users manage entries via `add-folder --workspace`.
+>
+> `repositoryFolders` — The internal organizational partitions *inside* the document repository. Contain scope ID ranges. Managed via `add-folder --repo`. Unrelated to workspace root folders.
+
 ### Config file format — assignedRanges
 
 ```json
 {
-  "documentRepo": "Reliquary",
   "prefixesEnabled": true,
   "scopeMethod": "assignedRanges",
   "repositoryFolders": [
     { "theme": "Templates, admin, vault docs", "folder": "00_Resources/", "rangeStart": 0, "rangeEnd": 999, "nextId": 0 },
     { "theme": "Personal focuses and projects", "folder": "10_Personal/", "rangeStart": 1000, "rangeEnd": 1999, "nextId": 1000 },
     { "theme": "Professional focuses and projects", "folder": "20_Professional/", "rangeStart": 2000, "rangeEnd": 2999, "nextId": 2000 }
+  ],
+  "workspaceFolders": [
+    { "folder": "Atelier/",   "role": "jots",        "description": "A place for quick notes and capturing ideas", "source": "core", "enabled": true },
+    { "folder": "Chrysalis/", "role": "ideation",     "description": "A place to expand and incubate ideas",       "source": "core", "enabled": true },
+    { "folder": "Reliquary/", "role": "documentRepo", "description": "Permanent document repository",              "source": "core", "required": true, "enabled": true }
   ],
   "scopeSubTypes": {
     "Resources": ["template", "reference", "admin"],
@@ -49,6 +59,11 @@ All ZettleDeck core configuration lives in `.zettledeck/core/config.json`. This 
     { "theme": "Templates, admin, vault docs", "folder": "00_Resources/" },
     { "theme": "Personal focuses and projects", "folder": "10_Personal/" },
     { "theme": "Professional focuses and projects", "folder": "20_Professional/" }
+  ],
+  "workspaceFolders": [
+    { "folder": "Atelier/",   "role": "jots",        "description": "A place for quick notes and capturing ideas", "source": "core", "enabled": true },
+    { "folder": "Chrysalis/", "role": "ideation",     "description": "A place to expand and incubate ideas",       "source": "core", "enabled": true },
+    { "folder": "Reliquary/", "role": "documentRepo", "description": "Permanent document repository",              "source": "core", "required": true, "enabled": true }
   ],
   "scopeSubTypes": {
     "Resources": ["template", "reference", "admin"],
@@ -146,19 +161,30 @@ For each top-level folder the user kept or added:
    - Suggest reasonable defaults based on the folder name
    - Always include `goal` as an option
 
-### 4. Document Repository
+### 4. Workspace Folders
 
-**What:** The name of the top-level folder that serves as the permanent vault — the destination for all promoted and structured content.
+**What:** The active working areas at the vault root. These are the folders where in-progress notes live before promotion. Each entry has a stable `role` identifier — physical folder names can be renamed without breaking skill behavior.
 
-**Config key:** `documentRepo`
+**Config key:** `workspaceFolders`
+
+**Default entries (pre-configured by core):**
+
+| Folder | Role | Description |
+|--------|------|-------------|
+| `Atelier/` | `jots` | Quick notes and idea capture |
+| `Chrysalis/` | `ideation` | Expanding and incubating ideas |
+| `Reliquary/` | `documentRepo` | Permanent document repository |
 
 **Questions:**
 
-1. "What is the name of your permanent storage folder? This is where structured notes and documents live long-term."
-   - Default: `Reliquary`
-   - Any folder name is valid — e.g., `Vault`, `Archive`, `Library`
+1. "Here are the default workspace folders. Would you like to rename any of them to match your style?"
+   - If yes: for each renamed folder, update the `folder` field. The `role` stays the same.
+   - The `Reliquary/` folder (role: `documentRepo`) is required — it cannot be removed. It can be renamed (e.g., `Vault/`, `Library/`).
 
-**Note:** This name is used by the `zettledeck` skill when promoting content. If you rename the folder later, update this value to match.
+2. "Would you like to add any additional workspace folders?"
+   - If yes: collect folder name, role (slugified suggestion from folder name), and description. Set `source: "custom"`, `enabled: true`.
+
+**Note:** Additional modules register their own workspace folders at install time. You can manage entries at any time via `/zettledeck.init add-folder --workspace` and `/zettledeck.init remove-folder --workspace`.
 
 ### 5. Document Naming
 
@@ -186,8 +212,9 @@ Present the wizard summary:
 ```
 Vault Configuration Summary
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Document repo:      {documentRepo}
-Repository folders: {list of folders}
+Repository folder:  {workspaceFolders[role:documentRepo].folder}
+Workspace folders:  {role: folder, ...}
+Repository folders: {list of repo partition folders}
 Scope ID method:    {assignedRanges | incremental}
   Ranges:           {folder → range, or "global nextId: N"}
 Scope subtypes:     {folder: [subtypes], ...}
