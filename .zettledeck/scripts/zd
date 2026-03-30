@@ -276,6 +276,20 @@ install_module_assets() {
         fi
     fi
 
+    # Copy note-rules.md to .zettledeck/{module-name}/note-rules.md
+    if [[ -f "${module_dir}/note-rules.md" ]]; then
+        local note_rules_target_dir="${CONFIG_DIR}/${module_name}"
+        mkdir -p "$note_rules_target_dir"
+        local note_rules_target="${note_rules_target_dir}/note-rules.md"
+        if [[ ! -f "$note_rules_target" ]]; then
+            cp "${module_dir}/note-rules.md" "$note_rules_target"
+            log_info "  Installed note-rules: ${module_name}/note-rules.md"
+            installed=$((installed + 1))
+        else
+            log_info "  note-rules for ${module_name} already exists. Skipping."
+        fi
+    fi
+
     # Deprecation check — doc-types.json replaced by module-config.json
     if [[ -f "${module_dir}/doc-types.json" ]]; then
         log_warn "  doc-types.json is deprecated — migrate to module-config.json. Skipping."
@@ -531,6 +545,14 @@ cmd_update() {
             mkdir -p "$init_target_dir"
             cp "${clone_dir}/init-steps.md" "${init_target_dir}/init-steps.md"
             log_info "  Updated init-steps: ${name}/init-steps.md"
+        fi
+
+        # Update note-rules.md (always overwrite — it's module-owned content)
+        if [[ -f "${clone_dir}/note-rules.md" ]]; then
+            local note_rules_target_dir="${CONFIG_DIR}/${name}"
+            mkdir -p "$note_rules_target_dir"
+            cp "${clone_dir}/note-rules.md" "${note_rules_target_dir}/note-rules.md"
+            log_info "  Updated note-rules: ${name}/note-rules.md"
         fi
 
         # Deprecation check — doc-types.json replaced by module-config.json
