@@ -337,14 +337,18 @@ merge_config() {
         preserve_fields=$(yq ".$section.preserveUserFields // [] | .[]" "$module_config_file" 2>/dev/null || true)
 
         for ((t=0; t<entry_count; t++)); do
-            local entry_key_val existing_source entry_json
+            local entry_key_val existing_entry existing_source entry_json
             entry_key_val=$(yq ".$section.entries[$t].$merge_key" "$module_config_file")
+            existing_entry=$(yq ".$section[] | select(.$merge_key == \"${entry_key_val}\")" \
+                "$core_config" 2>/dev/null || true)
             existing_source=$(yq ".$section[] | select(.$merge_key == \"${entry_key_val}\") | .source" \
                 "$core_config" 2>/dev/null || true)
 
             if [[ "$mode" == "install" ]]; then
-                if [[ -n "$existing_source" && "$existing_source" != "null" ]]; then
-                    log_info "  [$section] '${entry_key_val}' already registered (source: ${existing_source}). Skipping."
+                if [[ -n "$existing_entry" && "$existing_entry" != "null" ]]; then
+                    local src_display="${existing_source:-unknown}"
+                    [[ "$src_display" == "null" ]] && src_display="unknown"
+                    log_info "  [$section] '${entry_key_val}' already registered (source: ${src_display}). Skipping."
                     continue
                 fi
                 entry_json=$(yq -o=json ".$section.entries[$t]" "$module_config_file")
