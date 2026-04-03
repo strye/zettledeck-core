@@ -38,6 +38,7 @@ SHARED_SKILLS="${SHARED_DIR}/skills"
 SHARED_AGENTS="${SHARED_DIR}/agents"
 SHARED_STEERING="${SHARED_DIR}/steering"
 SHARED_TEMPLATES="${SHARED_DIR}/templates"
+SHARED_SETTINGS="${SHARED_DIR}/settings"
 
 # Colors
 RED='\033[0;31m'
@@ -94,7 +95,7 @@ require_config() {
 
 # Ensure shared directories exist
 ensure_shared_dirs() {
-    mkdir -p "$SHARED_SKILLS" "$SHARED_AGENTS" "$SHARED_STEERING" "$SHARED_TEMPLATES"
+    mkdir -p "$SHARED_SKILLS" "$SHARED_AGENTS" "$SHARED_STEERING" "$SHARED_TEMPLATES" "$SHARED_SETTINGS"
 }
 
 # ─── Init State Management ─────────────────────────────────────────────────
@@ -300,6 +301,11 @@ install_module_assets() {
         merge_config "${module_dir}/module-config.json" "$module_name" "install"
     fi
 
+    # Merge MCP server definitions into .shared/settings/mcp.json
+    if [[ -f "${module_dir}/mcp.json" ]]; then
+        merge_mcp_servers "${module_dir}/mcp.json" "$module_name"
+    fi
+
     echo "$installed"
 }
 
@@ -408,6 +414,65 @@ merge_config() {
         done
 
     done <<< "$sections"
+}
+
+# Merge MCP server definitions from a module's mcp.json into .shared/settings/mcp.json.
+#
+# Each server is keyed by name under "mcpServers". If a server with the same
+# name already exists in the target, it is skipped — and the user is warned
+# about any configuration differences between the two.
+#
+# Args:
+#   $1  Path to the module's mcp.json
+#   $2  Module name (for logging)
+merge_mcp_servers() {
+    local module_mcp="$1"
+    local module_name="$2"
+    local target_mcp="${SHARED_SETTINGS}/mcp.json"
+
+    # Seed the target file if it doesn't exist yet
+    if [[ ! -f "$target_mcp" ]]; then
+        echo '{ "mcpServers": {} }' > "$target_mcp"
+    fi
+
+    # Enumerate server names declared in the module's mcp.json
+    local server_names
+    server_names=$(yq -o=json '.mcpServers | keys | .[]' "$module_mcp" 2>/dev/null | tr -d '"')
+
+    if [[ -z "$server_names" ]]; then
+        log_warn "  mcp.json for ${module_name} contains no servers. Skipping."
+        return
+    fi
+
+    while IFS= read -r server_name; do
+        [[ -z "$server_name" ]] && continue
+
+        # Check if this server already exists in the target
+        local existing
+        existing=$(yq -o=json ".mcpServers.\"${server_name}\" // null" "$target_mcp")
+
+        if [[ "$existing" != "null" ]]; then
+            # Server exists — check for differences
+            local incoming
+            incoming=$(yq -o=json ".mcpServers.\"${server_name}\"" "$module_mcp")
+
+            if [[ "$existing" == "$incoming" ]]; then
+                log_info "  [mcp] '${server_name}' already configured. Skipping (identical)."
+            else
+                log_warn "  [mcp] '${server_name}' already configured. Skipping (configs differ)."
+                log_warn "        Existing: $(echo "$existing" | yq -o=json -I=0 '.')"
+                log_warn "        Module:   $(echo "$incoming" | yq -o=json -I=0 '.')"
+            fi
+            continue
+        fi
+
+        # Add the new server
+        local server_json
+        server_json=$(yq -o=json ".mcpServers.\"${server_name}\"" "$module_mcp")
+        yq -i ".mcpServers.\"${server_name}\" = ${server_json}" "$target_mcp"
+        log_ok "  [mcp] Registered server '${server_name}' (source: ${module_name})"
+
+    done <<< "$server_names"
 }
 
 # ─── Commands ───────────────────────────────────────────────────────────────
@@ -569,6 +634,11 @@ cmd_update() {
             merge_config "${clone_dir}/module-config.json" "$name" "update"
         fi
 
+        # Merge MCP server definitions (same as install — skip existing, warn on diff)
+        if [[ -f "${clone_dir}/mcp.json" ]]; then
+            merge_mcp_servers "${clone_dir}/mcp.json" "$name"
+        fi
+
         # Scaffold project-root directories (non-destructive — never overwrite user content)
         if [[ -d "${clone_dir}/scaffolding" ]]; then
             while IFS= read -r -d '' raw_path; do
@@ -698,6 +768,19 @@ cmd_setup() {
             log_warn "  .claude/agents exists as a directory. Skipping symlink."
         fi
 
+        # Symlink MCP settings (.mcp.json at project root → .shared/settings/mcp.json)
+        local mcp_link="${PROJECT_ROOT}/.mcp.json"
+        if [[ -L "$mcp_link" ]]; then
+            rm "$mcp_link"
+        fi
+        if [[ ! -f "$mcp_link" ]]; then
+            ln -s ".shared/settings/mcp.json" "$mcp_link"
+            log_info "  Linked .mcp.json → .shared/settings/mcp.json"
+            wired=$((wired + 1))
+        else
+            log_warn "  .mcp.json exists as a regular file. Skipping symlink."
+        fi
+
         log_ok "Claude Code wiring complete."
     fi
 
@@ -728,6 +811,18 @@ cmd_setup() {
             wired=$((wired + 1))
         else
             log_warn "  .kiro/steering exists as a directory. Skipping symlink."
+        fi
+
+        # Symlink settings directory
+        if [[ -L "${kiro_dir}/settings" ]]; then
+            rm "${kiro_dir}/settings"
+        fi
+        if [[ ! -d "${kiro_dir}/settings" ]]; then
+            ln -s "../.shared/settings" "${kiro_dir}/settings"
+            log_info "  Linked .kiro/settings → .shared/settings"
+            wired=$((wired + 1))
+        else
+            log_warn "  .kiro/settings exists as a directory. Skipping symlink."
         fi
 
         # Wire agent symlinks + JSON
@@ -809,6 +904,27 @@ cmd_status() {
         echo "  (none)"
     fi
 
+    # MCP Servers
+    echo ""
+    log_info "MCP Servers (.shared/settings/mcp.json):"
+    local mcp_file="${SHARED_SETTINGS}/mcp.json"
+    if [[ -f "$mcp_file" ]]; then
+        local server_names
+        server_names=$(yq -o=json '.mcpServers | keys | .[]' "$mcp_file" 2>/dev/null | tr -d '"')
+        if [[ -n "$server_names" ]]; then
+            while IFS= read -r sname; do
+                [[ -z "$sname" ]] && continue
+                local cmd
+                cmd=$(yq ".mcpServers.\"${sname}\".command" "$mcp_file" 2>/dev/null)
+                echo -e "  ${GREEN}${sname}${NC}  (${cmd})"
+            done <<< "$server_names"
+        else
+            echo "  (none configured)"
+        fi
+    else
+        echo "  (not initialized — run 'zd setup')"
+    fi
+
     # Init state
     echo ""
     log_info "Init State:"
@@ -877,6 +993,7 @@ cmd_status() {
         echo -e "  Claude Code:"
         [[ -L "${claude_dir}/skills" ]] && echo -e "    skills: ${GREEN}linked${NC}" || echo -e "    skills: ${YELLOW}not linked${NC}"
         [[ -L "${claude_dir}/agents" ]] && echo -e "    agents: ${GREEN}linked${NC}" || echo -e "    agents: ${YELLOW}not linked${NC}"
+        [[ -L "${PROJECT_ROOT}/.mcp.json" ]] && echo -e "    mcp:    ${GREEN}linked${NC}" || echo -e "    mcp:    ${YELLOW}not linked${NC}"
         if [[ -f "${PROJECT_ROOT}/CLAUDE.md" ]] && grep -q '.shared/steering' "${PROJECT_ROOT}/CLAUDE.md" 2>/dev/null; then
             echo -e "    steering: ${GREEN}referenced in CLAUDE.md${NC}"
         else
@@ -888,8 +1005,9 @@ cmd_status() {
 
     if [[ -d "$kiro_dir" ]]; then
         echo -e "  Kiro:"
-        [[ -L "${kiro_dir}/skills" ]] && echo -e "    skills: ${GREEN}linked${NC}" || echo -e "    skills: ${YELLOW}not linked${NC}"
+        [[ -L "${kiro_dir}/skills" ]] && echo -e "    skills:   ${GREEN}linked${NC}" || echo -e "    skills:   ${YELLOW}not linked${NC}"
         [[ -L "${kiro_dir}/steering" ]] && echo -e "    steering: ${GREEN}linked${NC}" || echo -e "    steering: ${YELLOW}not linked${NC}"
+        [[ -L "${kiro_dir}/settings" ]] && echo -e "    settings: ${GREEN}linked${NC}" || echo -e "    settings: ${YELLOW}not linked${NC}"
         local kiro_agent_count=0
         for f in "${kiro_dir}/agents"/*.md; do
             [[ -L "$f" ]] && ((kiro_agent_count++))
