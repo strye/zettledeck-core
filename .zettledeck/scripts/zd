@@ -39,6 +39,7 @@ SHARED_AGENTS="${SHARED_DIR}/agents"
 SHARED_STEERING="${SHARED_DIR}/steering"
 SHARED_TEMPLATES="${SHARED_DIR}/templates"
 SHARED_SETTINGS="${SHARED_DIR}/settings"
+PROVIDERS_DIR="${CONFIG_DIR}/providers"
 
 # Colors
 RED='\033[0;31m'
@@ -95,7 +96,7 @@ require_config() {
 
 # Ensure shared directories exist
 ensure_shared_dirs() {
-    mkdir -p "$SHARED_SKILLS" "$SHARED_AGENTS" "$SHARED_STEERING" "$SHARED_TEMPLATES" "$SHARED_SETTINGS"
+    mkdir -p "$SHARED_SKILLS" "$SHARED_AGENTS" "$SHARED_STEERING" "$SHARED_TEMPLATES" "$SHARED_SETTINGS" "$PROVIDERS_DIR"
 }
 
 # ─── Init State Management ─────────────────────────────────────────────────
@@ -304,6 +305,25 @@ install_module_assets() {
     # Merge MCP server definitions into .shared/settings/mcp.json
     if [[ -f "${module_dir}/mcp.json" ]]; then
         merge_mcp_servers "${module_dir}/mcp.json" "$module_name"
+    fi
+
+    # Copy provider files to .zettledeck/providers/
+    if [[ -d "${module_dir}/providers" ]]; then
+        for provider_file in "${module_dir}/providers"/*.md; do
+            [[ -f "$provider_file" ]] || continue
+            local provider_name
+            provider_name=$(basename "$provider_file")
+            local target="${PROVIDERS_DIR}/${provider_name}"
+
+            if [[ -f "$target" ]]; then
+                log_info "  Provider '${provider_name}' already exists. Skipping."
+                continue
+            fi
+
+            cp "$provider_file" "$target"
+            log_info "  Installed provider: ${provider_name}"
+            installed=$((installed + 1))
+        done
     fi
 
     echo "$installed"
@@ -639,6 +659,34 @@ cmd_update() {
             merge_mcp_servers "${clone_dir}/mcp.json" "$name"
         fi
 
+        # Update provider files (source-aware: overwrite module-owned, skip custom)
+        if [[ -d "${clone_dir}/providers" ]]; then
+            for provider_file in "${clone_dir}/providers"/*.md; do
+                [[ -f "$provider_file" ]] || continue
+                local provider_name
+                provider_name=$(basename "$provider_file")
+                local target="${PROVIDERS_DIR}/${provider_name}"
+
+                if [[ -f "$target" ]]; then
+                    # Check source ownership via frontmatter
+                    local existing_source
+                    existing_source=$(grep -m1 '^source:' "$target" 2>/dev/null | sed 's/^source:[[:space:]]*//' || true)
+
+                    if [[ "$existing_source" == "custom" ]]; then
+                        log_info "  Provider '${provider_name}' is custom — skipping."
+                        continue
+                    fi
+                    if [[ -n "$existing_source" && "$existing_source" != "$name" ]]; then
+                        log_info "  Provider '${provider_name}' owned by '${existing_source}' — skipping."
+                        continue
+                    fi
+                fi
+
+                cp "$provider_file" "$target"
+                log_info "  Updated provider: ${provider_name}"
+            done
+        fi
+
         # Scaffold project-root directories (non-destructive — never overwrite user content)
         if [[ -d "${clone_dir}/scaffolding" ]]; then
             while IFS= read -r -d '' raw_path; do
@@ -923,6 +971,25 @@ cmd_status() {
         fi
     else
         echo "  (not initialized — run 'zd setup')"
+    fi
+
+    # Providers
+    echo ""
+    log_info "Providers (.zettledeck/providers/):"
+    if [[ -d "$PROVIDERS_DIR" ]]; then
+        local found_providers=0
+        for provider_file in "${PROVIDERS_DIR}"/*.md; do
+            [[ -f "$provider_file" ]] || continue
+            local pname pcapability psource
+            pname=$(basename "$provider_file" .md)
+            pcapability=$(grep -m1 '^capability:' "$provider_file" 2>/dev/null | sed 's/^capability:[[:space:]]*//' || echo "unknown")
+            psource=$(grep -m1 '^source:' "$provider_file" 2>/dev/null | sed 's/^source:[[:space:]]*//' || echo "unknown")
+            echo -e "  ${GREEN}${pname}${NC}  (${pcapability}, source: ${psource})"
+            found_providers=1
+        done
+        [[ "$found_providers" -eq 0 ]] && echo "  (none)"
+    else
+        echo "  (none)"
     fi
 
     # Init state
