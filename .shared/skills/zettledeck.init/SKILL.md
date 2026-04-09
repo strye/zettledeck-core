@@ -5,7 +5,7 @@ description: Initialize and configure a ZettleDeck project. Walks users through 
 
 # ZettleDeck Project Initialization
 
-Interactive setup skill that walks users through customizing their ZettleDeck project. Handles all placeholder configuration so users don't need to manually find and edit `<!-- CUSTOMIZE -->` markers or "configured by consuming project" references.
+Interactive setup skill that walks users through customizing their ZettleDeck project. Writes runtime configuration to `.zettledeck/{module}/config.json` files so users don't need to manually edit config files or understand the config schema.
 
 ## Invocation
 
@@ -122,9 +122,10 @@ Each module that needs runtime configuration should write a `config.json` file i
 1. Document the config file format with all keys and defaults
 2. Walk the user through each config key
 3. Write the final `config.json` after all questions are answered
-4. Update skill files that reference the config path
 
 Skills read their config at runtime from `.zettledeck/{module-name}/config.json`. This keeps configuration co-located with the module that owns it.
+
+> **IMPORTANT — Never edit skill files.** Init writes *only* to `.zettledeck/` config files, provider files, CLAUDE.md, and init-state.yml. Skill files under `.claude/skills/` contain `{placeholder}` tokens that are resolved at runtime by reading the corresponding config. This separation ensures skills can be updated from source without overwriting project-specific configuration.
 
 ### Init-steps file structure
 
@@ -153,8 +154,6 @@ All {module} configuration is stored in `.zettledeck/{module-name}/config.json`.
 
 **What:** Explanation of what's being configured
 **Config key:** `keyName`
-**File:** path/to/file/being/modified (relative to project root)
-**Marker:** The placeholder text or CUSTOMIZE marker to find
 **Default:** A sensible default value
 
 ### Questions to ask the user
@@ -165,7 +164,7 @@ All {module} configuration is stored in `.zettledeck/{module-name}/config.json`.
 
 ### How to apply
 
-Instructions for what to write and where.
+Instructions for what value to write to the module's config.json.
 ```
 
 **Order field:** Controls the sequence when running all modules. Core is `10`, use `20+` for add-on modules.
