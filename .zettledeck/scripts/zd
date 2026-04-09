@@ -53,6 +53,21 @@ log_ok()    { echo -e "${GREEN}[zd]${NC} $1"; }
 log_warn()  { echo -e "${YELLOW}[zd]${NC} $1"; }
 log_error() { echo -e "${RED}[zd]${NC} $1"; }
 
+# Build a clone URL from the repo field in zettledeck.yml.
+# If the value already looks like a full URL (https://, git@, ssh://) use it as-is.
+# Otherwise, assume a GitHub-style short form and prepend https:// and append .git.
+resolve_clone_url() {
+    local repo="$1"
+    case "$repo" in
+        https://*|http://*|git@*|ssh://*)
+            echo "$repo"
+            ;;
+        *)
+            echo "https://${repo}.git"
+            ;;
+    esac
+}
+
 # Check dependencies
 check_deps() {
     local bootstrap_script
@@ -523,8 +538,10 @@ cmd_install() {
 
         log_info "Installing ${name} from ${repo} (${ref})..."
 
+        local clone_url
+        clone_url=$(resolve_clone_url "$repo")
         local clone_dir="${tmpdir}/${name}"
-        git clone --depth 1 --branch "$ref" "https://${repo}.git" "$clone_dir" 2>/dev/null || {
+        git clone --depth 1 --branch "$ref" "$clone_url" "$clone_dir" 2>/dev/null || {
             log_error "Failed to clone ${repo}. Check the URL and your access."
             continue
         }
@@ -569,8 +586,10 @@ cmd_update() {
 
         log_info "Updating ${name} from ${repo} (${ref})..."
 
+        local clone_url
+        clone_url=$(resolve_clone_url "$repo")
         local clone_dir="${tmpdir}/${name}"
-        git clone --depth 1 --branch "$ref" "https://${repo}.git" "$clone_dir" 2>/dev/null || {
+        git clone --depth 1 --branch "$ref" "$clone_url" "$clone_dir" 2>/dev/null || {
             log_error "Failed to clone ${repo}. Check the URL and your access."
             continue
         }
