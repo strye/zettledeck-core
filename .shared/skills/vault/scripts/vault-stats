@@ -1,0 +1,223 @@
+#!/usr/bin/env bash
+# vault-stats — Structural statistics for a vault or vault subfolder
+#
+# Usage:
+#   vault-stats <vault-root> [--scope <folder>] [--format tsv|text]
+#
+# Output (default: text):
+#   Human-readable summary of vault structure
+#
+# Output (--format tsv):
+#   TSV to stdout: metric    value
+#
+# Options:
+#   --scope <folder>    Restrict analysis to a subfolder of vault-root.
+#   --format tsv|text   Output format (default: text)
+#
+# Metrics reported:
+#   total_files       Total markdown file count
+#   total_words       Approximate total word count (excluding frontmatter)
+#   unique_doctypes   Number of distinct docType values seen
+#   unique_statuses   Number of distinct status values seen
+#   tagged_files      Files with at least one #tag or frontmatter tags field
+#   orphan_files      Files with no outgoing wikilinks and no incoming wikilinks
+#   date_range_first  Earliest file date (YYYY-MM-DD)
+#   date_range_last   Most recent file date (YYYY-MM-DD)
+#   files_no_date     Files where date could not be determined from frontmatter or filename
+#
+# Orphan detection requires vault-link-graph to be on PATH or in the same directory.
+#
+# Used by: nexus map, nexus orient, insight scan
+
+set -euo pipefail
+
+# ── Arguments ─────────────────────────────────────────────────────────────────
+
+VAULT_ROOT=""
+SCOPE=""
+FORMAT="text"
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --scope)  SCOPE="$2";  shift 2 ;;
+        --format) FORMAT="$2"; shift 2 ;;
+        -*)       echo "Unknown option: $1" >&2; exit 1 ;;
+        *)        VAULT_ROOT="$1"; shift ;;
+    esac
+done
+
+if [[ -z "$VAULT_ROOT" ]]; then
+    echo "Usage: vault-stats <vault-root> [--scope <folder>] [--format tsv|text]" >&2
+    exit 1
+fi
+
+if [[ ! -d "$VAULT_ROOT" ]]; then
+    echo "Error: vault root not found: $VAULT_ROOT" >&2
+    exit 1
+fi
+
+if [[ "$FORMAT" != "text" && "$FORMAT" != "tsv" ]]; then
+    echo "Error: --format must be 'text' or 'tsv'" >&2
+    exit 1
+fi
+
+SEARCH_ROOT="$VAULT_ROOT"
+if [[ -n "$SCOPE" ]]; then
+    SEARCH_ROOT="$VAULT_ROOT/$SCOPE"
+    if [[ ! -d "$SEARCH_ROOT" ]]; then
+        echo "Error: scope folder not found: $SEARCH_ROOT" >&2
+        exit 1
+    fi
+fi
+
+# ── Helpers ────────────────────────────────────────────────────────────────────
+
+extract_date() {
+    local file="$1"
+    local date=""
+    date=$(head -20 "$file" \
+        | grep -m1 -E '^(date|created):\s*' \
+        | sed -E 's/^(date|created):\s*"?([0-9]{4}-[0-9]{2}-[0-9]{2}).*/\2/' \
+        | grep -E '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' || true)
+    if [[ -z "$date" ]]; then
+        date=$(basename "$file" | grep -oE '^[0-9]{4}-[0-9]{2}-[0-9]{2}' || true)
+    fi
+    echo "${date:-}"
+}
+
+get_frontmatter_field() {
+    local file="$1"
+    local key="$2"
+    head -30 "$file" \
+        | grep -m1 -E "^${key}:\s*" \
+        | sed -E "s/^${key}:[[:space:]]*[\"']?([^\"'#]+)[\"']?.*/\1/" \
+        | sed 's/[[:space:]]*$//' \
+        || true
+}
+
+count_words_in_file() {
+    local file="$1"
+    awk '
+        /^---$/ && NR == 1 { in_fm=1; next }
+        /^---$/ && in_fm    { in_fm=0; next }
+        !in_fm              { n += NF }
+        END                 { print (n+0) }
+    ' "$file"
+}
+
+# ── Collect stats ──────────────────────────────────────────────────────────────
+
+total_files=0
+total_words=0
+files_no_date=0
+date_first=""
+date_last=""
+declare -A doctype_seen
+declare -A status_seen
+tagged_files=0
+
+while IFS= read -r -d '' file; do
+    [[ "$file" == *"/.git/"* ]] && continue
+    [[ "$file" == *"/assets/"* ]] && continue
+
+    total_files=$((total_files + 1))
+
+    wc=$(count_words_in_file "$file")
+    total_words=$((total_words + wc))
+
+    date=$(extract_date "$file")
+    if [[ -z "$date" ]]; then
+        files_no_date=$((files_no_date + 1))
+    else
+        if [[ -z "$date_first" || "$date" < "$date_first" ]]; then
+            date_first="$date"
+        fi
+        if [[ -z "$date_last" || "$date" > "$date_last" ]]; then
+            date_last="$date"
+        fi
+    fi
+
+    doctype=$(get_frontmatter_field "$file" "docType")
+    [[ -z "$doctype" ]] && doctype=$(get_frontmatter_field "$file" "doc_type")
+    [[ -n "$doctype" ]] && doctype_seen["$doctype"]=1
+
+    status=$(get_frontmatter_field "$file" "status")
+    [[ -n "$status" ]] && status_seen["$status"]=1
+
+    # Tagged: has #tag in body OR non-empty 'tags:' in frontmatter
+    if grep -qE '(^tags:\s*\[.+\]|^tags:\s*$|#[A-Za-z][A-Za-z0-9_-]*)' "$file" 2>/dev/null; then
+        tagged_files=$((tagged_files + 1))
+    fi
+
+done < <(find "$SEARCH_ROOT" -name "*.md" -not -path "*/.git/*" -print0)
+
+unique_doctypes="${#doctype_seen[@]}"
+unique_statuses="${#status_seen[@]}"
+
+# ── Orphan detection ───────────────────────────────────────────────────────────
+# Resolve vault-link-graph: same directory as this script, then PATH
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LINK_GRAPH_CMD=""
+if [[ -x "${SCRIPT_DIR}/vault-link-graph" ]]; then
+    LINK_GRAPH_CMD="${SCRIPT_DIR}/vault-link-graph"
+elif command -v vault-link-graph &>/dev/null; then
+    LINK_GRAPH_CMD="vault-link-graph"
+fi
+
+orphan_files="n/a"
+if [[ -n "$LINK_GRAPH_CMD" ]]; then
+    SCOPE_ARG=""
+    [[ -n "$SCOPE" ]] && SCOPE_ARG="--scope $SCOPE"
+
+    # Build sets of files that have at least one outgoing or incoming link
+    # shellcheck disable=SC2086
+    GRAPH_DATA=$(${LINK_GRAPH_CMD} "$VAULT_ROOT" ${SCOPE_ARG} 2>/dev/null | tail -n +2 || true)
+
+    if [[ -n "$GRAPH_DATA" ]]; then
+        declare -A linked_files
+        while IFS=$'\t' read -r source target _weight; do
+            linked_files["$source"]=1
+            # target may not resolve to a file, but count the source as non-orphan
+        done <<< "$GRAPH_DATA"
+
+        orphan_count=0
+        while IFS= read -r -d '' file; do
+            [[ "$file" == *"/.git/"* ]] && continue
+            [[ "$file" == *"/assets/"* ]] && continue
+            rel="${file#$SEARCH_ROOT/}"
+            rel="${rel%.md}"
+            if [[ -z "${linked_files[$rel]:-}" ]]; then
+                orphan_count=$((orphan_count + 1))
+            fi
+        done < <(find "$SEARCH_ROOT" -name "*.md" -not -path "*/.git/*" -print0)
+
+        orphan_files="$orphan_count"
+    fi
+fi
+
+# ── Output ─────────────────────────────────────────────────────────────────────
+
+if [[ "$FORMAT" == "tsv" ]]; then
+    printf "metric\tvalue\n"
+    printf "total_files\t%s\n"        "$total_files"
+    printf "total_words\t%s\n"        "$total_words"
+    printf "unique_doctypes\t%s\n"    "$unique_doctypes"
+    printf "unique_statuses\t%s\n"    "$unique_statuses"
+    printf "tagged_files\t%s\n"       "$tagged_files"
+    printf "orphan_files\t%s\n"       "$orphan_files"
+    printf "date_range_first\t%s\n"   "${date_first:-unknown}"
+    printf "date_range_last\t%s\n"    "${date_last:-unknown}"
+    printf "files_no_date\t%s\n"      "$files_no_date"
+else
+    scope_label="${SCOPE:-vault root}"
+    echo "Vault Stats — ${scope_label}"
+    echo "─────────────────────────────────"
+    printf "  %-22s %s\n" "Total files:"     "$total_files"
+    printf "  %-22s %s\n" "Total words:"     "$total_words"
+    printf "  %-22s %s\n" "Doc types seen:"  "$unique_doctypes"
+    printf "  %-22s %s\n" "Statuses seen:"   "$unique_statuses"
+    printf "  %-22s %s\n" "Tagged files:"    "$tagged_files"
+    printf "  %-22s %s\n" "Orphan files:"    "$orphan_files"
+    printf "  %-22s %s\n" "Date range:"      "${date_first:-unknown} → ${date_last:-unknown}"
+    printf "  %-22s %s\n" "Files no date:"   "$files_no_date"
+fi

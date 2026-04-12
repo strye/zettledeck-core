@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+# vault-link-graph — Build a wikilink graph from vault markdown files
+#
+# Usage:
+#   vault-link-graph <vault-root> [--scope <folder>] [--min-weight <n>]
+#
+# Output: TSV to stdout
+#   source    target    weight
+#
+# Options:
+#   --scope <folder>    Restrict search to a subfolder of vault-root.
+#                       Accepts a path relative to vault-root (e.g. "Reliquary").
+#                       File paths in output are relative to the scoped folder,
+#                       not vault-root.
+#   --min-weight <n>    Only output edges with weight >= n (default: 1)
+#
+# 'source' is the file containing the link (relative path, no extension).
+# 'target' is the wikilink target (as written — may or may not resolve to a file).
+# 'weight' is the number of times source links to target.
+#
+# Used by: nexus lint, nexus map, nexus connect, nexus link, nexus trace
+
+set -euo pipefail
+
+# ── Arguments ─────────────────────────────────────────────────────────────────
+
+VAULT_ROOT=""
+SCOPE=""
+MIN_WEIGHT=1
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --scope)      SCOPE="$2";      shift 2 ;;
+        --min-weight) MIN_WEIGHT="$2"; shift 2 ;;
+        -*)           echo "Unknown option: $1" >&2; exit 1 ;;
+        *)            VAULT_ROOT="$1"; shift ;;
+    esac
+done
+
+if [[ -z "$VAULT_ROOT" ]]; then
+    echo "Usage: vault-link-graph <vault-root> [--scope <folder>] [--min-weight <n>]" >&2
+    exit 1
+fi
+
+if [[ ! -d "$VAULT_ROOT" ]]; then
+    echo "Error: vault root not found: $VAULT_ROOT" >&2
+    exit 1
+fi
+
+SEARCH_ROOT="$VAULT_ROOT"
+if [[ -n "$SCOPE" ]]; then
+    SEARCH_ROOT="$VAULT_ROOT/$SCOPE"
+    if [[ ! -d "$SEARCH_ROOT" ]]; then
+        echo "Error: scope folder not found: $SEARCH_ROOT" >&2
+        exit 1
+    fi
+fi
+
+# ── Header ─────────────────────────────────────────────────────────────────────
+
+printf "source\ttarget\tweight\n"
+
+# ── Main ───────────────────────────────────────────────────────────────────────
+#
+# Strategy: for each markdown file, extract all [[wikilink]] targets.
+# Strip aliases ([[target|alias]] → target) and heading anchors ([[target#heading]] → target).
+# Accumulate counts per (source, target) pair, then emit pairs meeting --min-weight.
+
+# Use a temp file to accumulate raw edges before counting
+TMPFILE=$(mktemp)
+trap 'rm -f "$TMPFILE"' EXIT
+
+while IFS= read -r -d '' file; do
+    [[ "$file" == *"/.git/"* ]] && continue
+    [[ "$file" == *"/assets/"* ]] && continue
+
+    rel_source="${file#$SEARCH_ROOT/}"
+    # Strip .md extension for cleaner source names
+    rel_source="${rel_source%.md}"
+
+    # Extract wikilink targets: [[target]], [[target|alias]], [[target#heading]]
+    while IFS= read -r raw_link; do
+        [[ -z "$raw_link" ]] && continue
+        # Strip alias: take everything before | or #
+        target="${raw_link%%|*}"
+        target="${target%%#*}"
+        # Trim surrounding whitespace
+        target="${target#"${target%%[![:space:]]*}"}"
+        target="${target%"${target##*[![:space:]]}"}"
+        [[ -z "$target" ]] && continue
+        printf '%s\t%s\n' "$rel_source" "$target" >> "$TMPFILE"
+    done < <(grep -oE '\[\[[^\]]+\]\]' "$file" 2>/dev/null \
+        | sed -E 's/^\[\[//; s/\]\]$//' || true)
+
+done < <(find "$SEARCH_ROOT" -name "*.md" -not -path "*/.git/*" -print0)
+
+# Count and emit edges meeting min-weight threshold
+# Sort by source+target, count duplicates, filter, output
+if [[ -s "$TMPFILE" ]]; then
+    sort "$TMPFILE" \
+        | uniq -c \
+        | awk -v min="$MIN_WEIGHT" '
+            {
+                weight = $1
+                # Reconstruct source\ttarget from remaining fields
+                line = $0
+                sub(/^[[:space:]]*[0-9]+[[:space:]]+/, "", line)
+                if (weight >= min) {
+                    printf "%s\t%d\n", line, weight
+                }
+            }
+        '
+fi
