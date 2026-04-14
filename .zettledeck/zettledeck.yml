@@ -14,9 +14,6 @@ modules: []
   # - name: zettledeck-praxis
   #   repo: github.com/strye/zettledeck-praxis
   #   ref: main
-  # - name: zettledeck-nexus
-  #   repo: github.com/strye/zettledeck-nexus
-  #   ref: main
   # - name: zettledeck-foundry
   #   repo: github.com/strye/zettledeck-foundry
   #   ref: main

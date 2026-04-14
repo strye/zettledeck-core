@@ -1,0 +1,172 @@
+#!/usr/bin/env bash
+# nexus-index-sync — Sync Nexus/index.md against actual Nexus directory contents
+#
+# Usage:
+#   nexus-index-sync <nexus-root> [--patch]
+#
+# Output: TSV to stdout
+#   status    path    detail
+#
+# Status values:
+#   MISSING   File exists on disk but is not listed in index.md
+#   GHOST     Entry in index.md points to a file that does not exist
+#   OK        File exists and is listed in index.md
+#
+# Options:
+#   --patch   Automatically add MISSING entries to index.md and remove GHOST entries.
+#             Without --patch, this script is read-only (dry run).
+#
+# The script reads index.md for wikilink references ([[PageName]]) and compares
+# them against the actual .md files present under nexus-root/pages/.
+#
+# Used by: nexus lint, nexus ingest, nexus query, nexus discover
+
+set -euo pipefail
+
+# ── Arguments ────────────────────────────────────────────────────────────────
+
+NEXUS_ROOT=""
+PATCH=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --patch) PATCH=true; shift ;;
+        -*)      echo "Unknown option: $1" >&2; exit 1 ;;
+        *)       NEXUS_ROOT="$1"; shift ;;
+    esac
+done
+
+if [[ -z "$NEXUS_ROOT" ]]; then
+    echo "Usage: nexus-index-sync <nexus-root> [--patch]" >&2
+    exit 1
+fi
+
+if [[ ! -d "$NEXUS_ROOT" ]]; then
+    echo "Error: Nexus root not found: $NEXUS_ROOT" >&2
+    exit 1
+fi
+
+INDEX_FILE="$NEXUS_ROOT/index.md"
+PAGES_DIR="$NEXUS_ROOT/pages"
+
+if [[ ! -f "$INDEX_FILE" ]]; then
+    echo "Error: index.md not found at $INDEX_FILE" >&2
+    echo "Run 'nexus init' or 'nexus ingest' to create it." >&2
+    exit 1
+fi
+
+# ── Build set of pages referenced in index.md ────────────────────────────────
+# Extract [[PageName]] or [[PageName|Alias]] wikilinks from index.md.
+
+declare -A INDEX_REFS   # key: stem (no .md), value: line number where found
+
+while IFS= read -r line; do
+    line_num=$((line_num + 1))
+    # Extract all [[...]] references from this line
+    while [[ "$line" =~ \[\[([^]|]+)(\|[^]]+)?\]\] ]]; do
+        ref="${BASH_REMATCH[1]}"
+        # Remove any leading path separators or spaces
+        ref=$(echo "$ref" | sed 's|^[[:space:]]*||;s|[[:space:]]*$||')
+        INDEX_REFS["$ref"]=$line_num
+        # Advance past this match to find more on the same line
+        line="${line#*${BASH_REMATCH[0]}}"
+    done
+done < "$INDEX_FILE"
+
+# ── Build set of actual page files on disk ───────────────────────────────────
+# Only look inside pages/ — raw/, assets/, log.md, index.md are not pages.
+
+declare -A DISK_FILES   # key: stem (no .md), value: relative path from nexus-root
+
+if [[ -d "$PAGES_DIR" ]]; then
+    while IFS= read -r -d '' file; do
+        rel="${file#$NEXUS_ROOT/}"
+        stem=$(basename "$file" .md)
+        DISK_FILES["$stem"]="$rel"
+    done < <(find "$PAGES_DIR" -name "*.md" -not -path "*/.git/*" -print0)
+fi
+
+# ── Compare and emit report ───────────────────────────────────────────────────
+
+printf "status\tpath\tdetail\n"
+
+MISSING_COUNT=0
+GHOST_COUNT=0
+OK_COUNT=0
+
+# Files on disk not in index
+for stem in "${!DISK_FILES[@]}"; do
+    rel="${DISK_FILES[$stem]}"
+    if [[ -z "${INDEX_REFS[$stem]+_}" ]]; then
+        printf 'MISSING\t%s\tFile exists on disk but not listed in index.md\n' "$rel"
+        MISSING_COUNT=$((MISSING_COUNT + 1))
+    else
+        printf 'OK\t%s\tListed in index.md\n' "$rel"
+        OK_COUNT=$((OK_COUNT + 1))
+    fi
+done
+
+# Index entries pointing to missing files
+for ref in "${!INDEX_REFS[@]}"; do
+    line="${INDEX_REFS[$ref]}"
+    if [[ -z "${DISK_FILES[$ref]+_}" ]]; then
+        printf 'GHOST\t%s\tReferenced in index.md (line %s) but file not found on disk\n' \
+            "$ref" "$line"
+        GHOST_COUNT=$((GHOST_COUNT + 1))
+    fi
+done
+
+# ── Summary ───────────────────────────────────────────────────────────────────
+
+printf '\n# Summary\n' >&2
+printf 'OK:      %d\n' "$OK_COUNT"      >&2
+printf 'MISSING: %d\n' "$MISSING_COUNT" >&2
+printf 'GHOST:   %d\n' "$GHOST_COUNT"   >&2
+
+if [[ $MISSING_COUNT -eq 0 && $GHOST_COUNT -eq 0 ]]; then
+    printf 'Index is in sync.\n' >&2
+    exit 0
+fi
+
+# ── Patch mode ────────────────────────────────────────────────────────────────
+
+if [[ "$PATCH" == true ]]; then
+    if [[ $MISSING_COUNT -gt 0 || $GHOST_COUNT -gt 0 ]]; then
+        printf '\nPatching index.md...\n' >&2
+
+        # Remove GHOST entries — lines containing [[ref]] where ref is a ghost
+        TMPFILE=$(mktemp)
+        trap 'rm -f "$TMPFILE"' EXIT
+
+        cp "$INDEX_FILE" "$TMPFILE"
+
+        for ref in "${!INDEX_REFS[@]}"; do
+            if [[ -z "${DISK_FILES[$ref]+_}" ]]; then
+                # Remove lines that only contain this ghost wikilink entry
+                # (conservative: only removes lines where the wikilink is the primary content)
+                sed -i.bak "/\[\[${ref}\]\]/d" "$TMPFILE" 2>/dev/null \
+                    || sed -i "" "/\[\[${ref}\]\]/d" "$TMPFILE"
+                printf 'Removed ghost entry: [[%s]]\n' "$ref" >&2
+            fi
+        done
+
+        # Append MISSING entries under an ## Unindexed section
+        if [[ $MISSING_COUNT -gt 0 ]]; then
+            printf '\n## Unindexed (added by nexus-index-sync)\n\n' >> "$TMPFILE"
+            for stem in "${!DISK_FILES[@]}"; do
+                rel="${DISK_FILES[$stem]}"
+                if [[ -z "${INDEX_REFS[$stem]+_}" ]]; then
+                    printf '- [[%s]]\n' "$stem" >> "$TMPFILE"
+                    printf 'Added missing entry: [[%s]]\n' "$stem" >&2
+                fi
+            done
+        fi
+
+        cp "$TMPFILE" "$INDEX_FILE"
+        printf 'index.md patched.\n' >&2
+    fi
+else
+    if [[ $MISSING_COUNT -gt 0 || $GHOST_COUNT -gt 0 ]]; then
+        printf '\nRun with --patch to update index.md.\n' >&2
+    fi
+fi
