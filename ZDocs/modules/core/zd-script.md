@@ -114,8 +114,8 @@ modules:
     repo: github.com/strye/zettledeck-praxis
     ref: main
 
-  - name: zettledeck-nexus
-    repo: github.com/strye/zettledeck-nexus
+  - name: zettledeck-ideation
+    repo: github.com/strye/zettledeck-ideation
     ref: main
 ```
 

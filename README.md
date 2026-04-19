@@ -33,14 +33,14 @@ So ZettleDeck gives ideas room to mature before they earn their place in the Zet
 
 Every piece of work lives in one of eight **workspaces** — each a top-level folder with a specific purpose. Nothing has to be filed correctly on arrival:
 
-- **Atelier** — raw capture. A passing thought, a half-formed question. No format, no expectations.
-- **Chrysalis** — incubation. When something shows enough life to revisit, it moves here. Fragments connect, patience does the work, dead ends get discarded.
-- **Tesseract** — research. External investigation, gathered and processed.
-- **Foundry** — content crafting. Ideas with shape get refined into finished artifacts.
-- **Nexus** — the thinking partner. Looks inward across everything you've accumulated to surface patterns, contradictions, and implicit ideas — the Karpathy pattern, extended. This is the Zettelkasten's emergent intelligence made operational.
-- **Scriptorium** — correspondence. Emails and messages that need thought but not the full Foundry treatment.
-- **Praxis** — daily practice. Diary, tasks, ruthless priorities — the operational backbone.
-- **Reliquary** — the permanent collection, and the Zettelkasten proper. Anything worth keeping graduates here with full structure — scope, addressing, frontmatter, explicit links.
+- **Atelier** — raw capture. A passing thought, a half-formed question. No format, no expectations. *(zettledeck-ideation)*
+- **Chrysalis** — incubation. When something shows enough life to revisit, it moves here. Fragments connect, patience does the work, dead ends get discarded. *(zettledeck-ideation)*
+- **Tesseract** — research. External investigation, gathered and processed. *(zettledeck-foundry)*
+- **Foundry** — content crafting. Ideas with shape get refined into finished artifacts. *(zettledeck-foundry)*
+- **Nexus** — the thinking partner. Looks inward across everything you've accumulated to surface patterns, contradictions, and implicit ideas — the Karpathy pattern, extended. This is the Zettelkasten's emergent intelligence made operational. *(core)*
+- **Scriptorium** — correspondence. Emails and messages that need thought but not the full Foundry treatment. *(zettledeck-praxis)*
+- **Praxis** — daily practice. Diary, tasks, ruthless priorities — the operational backbone. *(zettledeck-praxis)*
+- **Reliquary** — the permanent collection, and the Zettelkasten proper. Anything worth keeping graduates here with full structure — scope, addressing, frontmatter, explicit links. *(core)*
 
 ```
 Atelier → Chrysalis → ┬── Foundry ───→ Reliquary
@@ -77,7 +77,7 @@ ZettleDeck ships with a four-layer personal assistant (profile, accommodations, 
 
 ## What This Repo Provides
 
-`zettledeck-core` is the template you clone to start a new ZettleDeck project. It provides the foundation; add-on modules (praxis, nexus, foundry, etc.) layer on the workspace scaffolding, skills, and agents for each stage of the flow.
+`zettledeck-core` is the template you clone to start a new ZettleDeck project. It provides the foundation; add-on modules (praxis, ideation, foundry, etc.) layer on the workspace scaffolding, skills, and agents for each stage of the flow.
 
 - **A project template** — clone it to start a new ZettleDeck vault
 - **A module composer** — `zd`, a CLI that installs add-on modules and wires them into Claude Code or Kiro
@@ -138,14 +138,14 @@ Full documentation lives in [`ZDocs/`](ZDocs/README.md) and is split between eve
 ## Available Modules
 
 
-| Module                  | Purpose                                                                 | Status      |
-| ------------------------- | ------------------------------------------------------------------------- | ------------- |
-| **zettledeck-core**     | Foundation — template, composer, core skills                           | (this repo) |
-| **zettledeck-praxis**   | Daily practice — diary, email, tasks, comms, weekly reshape            | Available   |
-| **zettledeck-nexus**    | Vault intelligence — graph analysis, ideas, reflection, contradictions | Available   |
-| **zettledeck-foundry**  | Content creation — deep research, writing, content versioning          | Available   |
-| **zettledeck-obsidian** | Optional bridge to an external Obsidian vault via the obsidian-cli      | Available   |
-| **rostrum-blackboard**  | Human-conducted blackboard pattern                                      | Available   |
+| Module                    | Purpose                                                                 | Status      |
+| ------------------------- | ----------------------------------------------------------------------- | ------------- |
+| **zettledeck-core**       | Foundation — template, composer, core skills, Nexus workspace          | (this repo) |
+| **zettledeck-ideation**   | Ideation lifecycle — Atelier, Chrysalis, notion and idea management    | Available   |
+| **zettledeck-praxis**     | Daily practice — diary, email, tasks, comms, weekly reshape            | Available   |
+| **zettledeck-foundry**    | Content creation — deep research, writing, content versioning          | Available   |
+| **zettledeck-obsidian**   | Optional bridge to an external Obsidian vault via the obsidian-cli     | Available   |
+| **rostrum-blackboard**    | Human-conducted blackboard pattern                                      | Available   |
 
 Declare them in `.zettledeck/zettledeck.yml` to install. See [Building Modules](ZDocs/guides/building-modules/README.md) if you want to create your own.
 

@@ -127,7 +127,7 @@ Types: {count per discovery type}
 - **vs. ingest**: Ingest processes external sources. Discover processes the knowledge base itself.
 
 Discover outputs often feed back into the system:
-- Emergent ideas may move to the Chrysalis for incubation
+- Emergent ideas may move to an incubation workspace if one is configured
 - Identified gaps may trigger new research in the Tesseract
 - Cross-domain connections may inform Foundry content
 - Convergence signals may strengthen existing synthesis pages

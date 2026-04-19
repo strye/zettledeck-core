@@ -30,12 +30,9 @@ Lightweight tool for creating and executing repeatable workflows defined in mark
 
 Display available modes and list any existing runbooks found in the default location.
 
-**Default location resolution:**
-1. `Praxis/runbooks/` if Praxis folder exists
-2. `Atelier/runbooks/` if Atelier folder exists
-3. Ask user if neither exists
+**Default location:** `.zettledeck/runbooks/`
 
-Scan the resolved folder for `*-runbook.md` files and list them.
+Scan the default location for `*-runbook.md` files and list them.
 
 ## Mode: New
 
@@ -45,9 +42,8 @@ Walk the user through creating a new runbook. See `references/runbook-schema.md`
 
 1. **Name and location**
    - Ask for a runbook name (`rb_name`). Kebab-case, no spaces.
-   - Resolve default parent folder (`parent_fld`) using the location resolution rules above.
-   - Present the default: `{parent_fld}/{rb_name}/`
-   - User MAY override with a different path.
+   - Ask where to place the runbook, suggesting the default: `.zettledeck/runbooks/{rb_name}/`
+   - Use the user's answer as `parent_fld`; fall back to `.zettledeck/runbooks/` if they accept the default.
 
 2. **Create folder**
    - Create `{parent_fld}/{rb_name}/`
@@ -97,7 +93,7 @@ Execute a runbook file.
 
 1. **Resolve file**
    - If `{fileName}` is a path, use directly.
-   - If `{fileName}` is a name (no path), look in the default runbook location for `{fileName}/{fileName}-runbook.md` or `{fileName}-runbook.md`.
+   - If `{fileName}` is a name (no path), look in `.zettledeck/runbooks/` for `{fileName}/{fileName}-runbook.md` or `{fileName}-runbook.md`.
    - If not found, ask user to confirm location or offer to create a new runbook.
 
 2. **Read and validate**

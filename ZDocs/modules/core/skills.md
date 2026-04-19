@@ -5,7 +5,7 @@ description: Detailed reference for the four skills zettledeck-core ships — ze
 
 # Core Skills
 
-The four skills that ship with `zettledeck-core`. Two are invocable (`zettledeck`, `zettledeck.init`) — you summon them with a slash command. Two are background references (`markdown`, `vault`) that the assistant loads automatically when the relevant context is active.
+The six skills that ship with `zettledeck-core`. Two are user-invocable (`zettledeck`, `zettledeck.init`) — summoned with a slash command. Two are invocable knowledge-intelligence skills (`nexus`, `insight`). Two are background references (`markdown`, `vault`) that the assistant loads automatically when the relevant context is active.
 
 ## How skills are wired in
 
@@ -29,7 +29,7 @@ The methodology skill. It holds the vault-structure knowledge (addressing, front
 
 **`help`** — conversational Q&A about ZettleDeck concepts, workflow, and vault structure. Loads `resources/help.md`. Auto-triggers when the user asks about ZettleDeck concepts, mentions a workspace folder by name, or seems confused about vault structure or placement. Answers plainly first, then follows up with specifics and a pointer to the source document if deeper reading is warranted.
 
-**`promote`** — moves a document from a workspace (Atelier, Chrysalis, Foundry, etc.) into the Reliquary with full vault structure applied. The three phases:
+**`promote`** — moves a document from a workspace into the Reliquary with full vault structure applied. The three phases:
 
 1. **Read and Infer** — reads the source, infers title, docType, subType, existing scope membership, and proposes a scopeId.
 2. **Propose and Confirm** — presents a promotion proposal (scope, zettldex, destination path, filename) and asks for confirmation before proceeding.
@@ -182,7 +182,90 @@ Scripts live in `.shared/skills/vault/scripts/`. If the implementation of an ope
 
 ### Used by
 
-Primarily by the `nexus` and `insight` skills in `zettledeck-nexus` — the vault-analysis modes (`lint`, `map`, `connect`, `link`, `trace`, `orient`, `scan`, `align`) all build on these three primitives.
+Primarily by the `nexus` and `insight` skills — the vault-analysis modes (`lint`, `map`, `connect`, `link`, `trace`, `orient`, `scan`, `align`) all build on these three primitives.
+
+## `nexus` — knowledge intelligence
+
+**Type:** invocable
+**Invocation:** `/nexus {mode} [arguments]`
+
+The knowledge intelligence skill. Builds and maintains a persistent, compounding knowledge base from raw sources (the Karpathy LLM Wiki pattern), and analyzes the wider vault for patterns, connections, and structural health.
+
+Nexus operates on two scopes:
+
+- **Knowledge base scope** (`ingest`, `query`, `lint`, `discover`): reads and writes pages inside the Nexus workspace. These modes manage the LLM-owned knowledge base.
+- **Vault-wide scope** (`connect`, `trace`, `map`, `link`): reads across the entire vault to analyze patterns, connections, and topology.
+
+### Modes
+
+| Mode | Scope | Description |
+|------|-------|-------------|
+| `ingest` | Nexus | Process a source: summarize, cross-reference, update index/log |
+| `query` | Nexus | Search the knowledge base, synthesize an answer with citations |
+| `lint` | Nexus | Health-check: contradictions, orphans, stale claims, missing links |
+| `discover` | Nexus | Surface emergent ideas from accumulated knowledge |
+| `connect` | Vault | Find hidden bridges between two named domains |
+| `trace` | Vault | Track how an idea evolved over time |
+| `map` | Vault | Analyze vault topology — clusters, hubs, orphans, gaps |
+| `link` | Vault | Score and recommend strategic connections |
+| `init` | Nexus | Interactive setup: customize structure, page types, conventions |
+| `help` | — | Display quick reference |
+
+### Knowledge base structure
+
+```
+Nexus/
+├── NEXUS.md        — schema (conventions, page types, workflows)
+├── index.md        — content catalog (updated on every ingest)
+├── log.md          — chronological activity record
+├── raw/            — immutable source documents
+└── pages/          — LLM-generated pages
+    ├── sources/
+    ├── entities/
+    ├── concepts/
+    └── synthesis/
+```
+
+Structure is customizable via `nexus init`. Skills operate on defaults if `NEXUS.md` is absent.
+
+### Key constraint
+
+The LLM never modifies files in `raw/` (immutable source of truth), never deletes pages without explicit approval, and never modifies content in files outside the Nexus root. Metadata enhancements outside the Nexus root (wikilinks, frontmatter, cross-references) are permitted with explicit user approval per operation.
+
+---
+
+## `insight` — vault pattern intelligence
+
+**Type:** invocable
+**Invocation:** `/insight {mode} [arguments]`
+
+Surfaces what your accumulated vault is pointing toward — the ideas, depth gaps, and leverage points that your knowledge implies but hasn't stated. Operates across workspace folders configured in `.zettledeck/core/config.json`.
+
+### Modes
+
+| Mode | Description |
+|------|-------------|
+| `ideate` | Surface implied ideas and generate new ones from vault patterns; accepts role arguments to scope by workspace |
+| `score` | Assess execution readiness of accumulated ideas — 4-dimension scoring |
+| `learn` | Find 3-7 high-leverage skills where 50-100hr investment produces step-function returns across 3+ domains |
+| `scan` | Survey knowledge depth across all domains — produces a ranked compound depth map |
+| `temporal` | Show how accumulated context improves answer quality over time |
+| `orient` | Systematically read the vault to build deep context before starting work |
+
+### Idea Strength scale
+
+`ideate` output includes an Idea Strength rating (1–4):
+
+- **1 — Signal**: weak evidence, seen once or twice
+- **2 — Forming**: recurring pattern across multiple entries
+- **3 — Developed**: strong cross-domain evidence, clear shape
+- **4 — Ready**: execution-ready, next steps are obvious
+
+### Configuration
+
+`insight ideate` reads `workspaceFolders` from `.zettledeck/core/config.json` to resolve role → folder path. Other modes use vault path placeholders (`{diary-path}`, `{rp-path}`) configured by the `praxis` module.
+
+---
 
 ## Adding your own skills
 

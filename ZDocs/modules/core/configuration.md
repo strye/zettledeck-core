@@ -43,7 +43,7 @@ For the *why* behind these fields, read [[vault-structure|Vault Structure]] firs
 | `prefixesEnabled`   | boolean | Whether filenames use single-letter type prefixes (`P1001_…`)    |
 | `scopeMethod`       | string  | `"assignedRanges"` or `"incremental"` — how new scope IDs are assigned |
 | `repositoryFolders` | array   | Internal partitions inside the document repository                |
-| `workspaceFolders`  | array   | Root-level working areas (Atelier, Chrysalis, Reliquary, etc.)   |
+| `workspaceFolders`  | array   | Root-level working areas (Nexus, Reliquary, and any registered by modules)   |
 | `scopeSubTypes`     | object  | Per-repository-folder list of valid scope subTypes                |
 | `documentTypes`     | array   | Registered document types with prefix, subTypes, placement, parents |
 
@@ -123,10 +123,11 @@ The root-level working areas of the project. Each entry is role-keyed — skills
 
 ```json
 {
-  "folder": "Atelier/",
-  "role": "jots",
-  "description": "A place for quick notes and capturing ideas",
+  "folder": "Nexus/",
+  "role": "nexus",
+  "description": "Vault intelligence — knowledge graph analysis, idea surfacing, and reflection",
   "source": "core",
+  "required": true,
   "enabled": true
 }
 ```

@@ -23,8 +23,8 @@ Surface what your vault is pointing toward — the ideas, depth gaps, and levera
 
 ```
 /insight ideate
-/insight ideate jots
-/insight ideate jots ideation documentRepo
+/insight ideate capture
+/insight ideate capture incubation documentRepo
 /insight score
 /insight learn
 /insight scan

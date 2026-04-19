@@ -12,9 +12,9 @@ Before analysis, resolve which workspace folders to cover.
 
 ```
 /insight ideate                              — all enabled workspace folders
-/insight ideate jots                         — Atelier only
-/insight ideate jots ideation                — Atelier + Chrysalis
-/insight ideate jots ideation documentRepo   — Atelier + Chrysalis + Reliquary
+/insight ideate capture                      — folder with role "capture" only
+/insight ideate capture incubation           — folders with roles "capture" + "incubation"
+/insight ideate capture incubation documentRepo   — roles "capture" + "incubation" + "documentRepo"
 ```
 
 Produce a scope summary before proceeding:
@@ -194,6 +194,12 @@ For each idea (3-5 total):
 - [Vault reference 2]
 
 **Impact:** [1-5] | **Novelty:** [1-5] | **Score:** [Impact × Novelty]
+
+**Idea Strength** (1–4):
+- **1 — Signal**: weak evidence, seen once or twice
+- **2 — Forming**: recurring pattern across multiple entries
+- **3 — Developed**: strong cross-domain evidence, clear shape
+- **4 — Ready**: execution-ready, next steps are obvious
 
 **Why now:** [Why this idea is relevant given current patterns]
 

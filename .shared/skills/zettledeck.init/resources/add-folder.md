@@ -13,7 +13,7 @@ Two folder types exist — determine which the user intends:
 - `--repo` — an internal partition inside the document repository (goes into `repositoryFolders`)
 
 If no flag is provided, ask:
-> "Are you adding a workspace folder (a root-level working area like Atelier or Chrysalis) or a repository folder (an internal partition inside your document repository)?"
+> "Are you adding a workspace folder (a root-level working area like Foundry or Tesseract) or a repository folder (an internal partition inside your document repository)?"
 
 ---
 

@@ -9,14 +9,18 @@
 #   templates/  — template files, copied into .shared/templates/
 #   scripts/    — helper scripts, copied into .zettledeck/scripts/
 
-modules: []
-  # Uncomment to add modules:
+modules:
+  # Default-on modules — recommended for most projects
+  - name: zettledeck-ideation
+    repo: github.com/strye/zettledeck-ideation
+    ref: main
+    default: true
+  - name: zettledeck-foundry
+    repo: github.com/strye/zettledeck-foundry
+    ref: main
+    default: true
+  # Uncomment to add more modules:
   # - name: zettledeck-praxis
   #   repo: github.com/strye/zettledeck-praxis
   #   ref: main
-  # - name: zettledeck-foundry
-  #   repo: github.com/strye/zettledeck-foundry
-  #   ref: main
-  # - name: rostrum-blackboard
-  #   repo: github.com/strye/rostrum-blackboard
-  #   ref: main
+  #   default: false

@@ -39,19 +39,9 @@ The `prefix` value is also used directly as the zettldex segment (e.g., `1001.S`
 
 ## 2. Workspace Folders
 
-Configured via `workspaceFolders` in `.zettledeck/core/config.json`. These are the active working areas at the vault root where in-progress notes are created. Each entry has a stable `role` identifier used by skills — physical folder names can be renamed by the user without breaking skill behavior.
+The authoritative list of workspace folders and their roles is in `.zettledeck/core/config.json` under `workspaceFolders`. Core provides `nexus` and `documentRepo`; optional modules register additional roles at install time.
 
-| Role | Default Folder | Description |
-|------|---------------|-------------|
-| `jots` | `Atelier/` | Quick notes and idea capture |
-| `ideation` | `Chrysalis/` | Expanding and incubating ideas |
-| `documentRepo` | `Reliquary/` | Permanent document repository (promote destination) |
-
-**Role resolution:** Skills resolve folder names at runtime via role. To find the repository: look up `role: "documentRepo"` in `workspaceFolders`. The `required: true` flag on that entry signals it must always be present.
-
-**`enabled` field:** Set `enabled: false` on any entry to exclude it from note creation flows. The `documentRepo` entry cannot be disabled — it is required for promote operations.
-
-Modules register additional workspace folders at install time via `module-config.json`. Users can add custom entries via `/zettledeck.init add-folder --workspace`.
+For the conceptual picture of how workspace roles fit together and flow into each other, see `the-way.md` (also available via `/zettledeck help the-way`).
 
 ---
 

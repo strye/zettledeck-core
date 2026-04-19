@@ -36,10 +36,10 @@ When thinking about *where work happens* → workspaces. When thinking about *ho
 
 ## Workspace Structure
 
-### Atelier
+### Atelier *(provided by `zettledeck-ideation`)*
 Raw capture space for unstructured notes, quick ideas, and spontaneous thinking. No format requirements, no metadata expectations — just get it down. Think of it as the artist's workbench where sketches, fragments, and "what if" notes land before they have any shape. Items here are ephemeral by default and graduate to Chrysalis or other spaces when they start to coalesce.
 
-### Chrysalis
+### Chrysalis *(provided by `zettledeck-ideation`)*
 Incubation space where captured ideas from Atelier (or anywhere) sit while they develop. Notes here have shown enough promise to revisit but aren't yet structured enough for Foundry, Tesseract, or Nexus. Periodically review Chrysalis to promote items that have matured, merge related fragments, or discard ideas that have gone cold.
 
 ### Praxis

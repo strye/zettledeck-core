@@ -17,7 +17,7 @@ Core is the minimum viable ZettleDeck. Five things come out of the box:
 - **Core skills** — four skills loaded by default: `zettledeck` (methodology + promote), `zettledeck.init` (setup), `markdown` (conventions), `vault` (file analysis). See [[skills|Core Skills]].
 - **The four-layer personal assistant** — identity, accommodations, personality, and PA framework, loaded every session. See [[personal-assistant/README|The Personal Assistant]].
 
-Core also scaffolds three workspace folders at the project root: `Atelier/`, `Chrysalis/`, and `Reliquary/`. These are the minimum capture-incubate-keep flow. Other workspaces (Praxis, Foundry, Nexus, Scriptorium, Tesseract) are scaffolded by their respective add-on modules.
+Core scaffolds two workspace folders at the project root: `Nexus/` and `Reliquary/`. The `zettledeck-ideation` module (default-on) adds `Atelier/` and `Chrysalis/`. Other workspaces (Praxis, Foundry, Scriptorium, Tesseract) are scaffolded by their respective add-on modules.
 
 ## Project structure
 
@@ -61,11 +61,12 @@ my-vault/
 │   └── agents/                        Individual symlinks + generated JSON
 ├── .mcp.json → .shared/settings/mcp.json   (Claude Code only)
 ├── AGENTS.md                          Declares the default agent and load order
-├── Atelier/, Chrysalis/, Reliquary/   Workspace folders (core scaffolds these)
+├── Nexus/, Reliquary/                 Workspace folders (core scaffolds these)
+├── Atelier/, Chrysalis/               Workspace folders (zettledeck-ideation, default-on)
 └── README.md
 ```
 
-Add-on modules scaffold their own workspace folders (`Praxis/`, `Nexus/`, `Foundry/`, `Scriptorium/`, `Tesseract/`) non-destructively at install time.
+Add-on modules scaffold their own workspace folders (`Praxis/`, `Foundry/`, `Scriptorium/`, `Tesseract/`) non-destructively at install time.
 
 ### Why the split between `.shared/` and `.zettledeck/`
 

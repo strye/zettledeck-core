@@ -16,7 +16,7 @@ Core methodology skill. Routes to the relevant resource — don't load all resou
 
 Auto-triggered when the user:
 - Asks about ZettleDeck concepts, document types, or workflow
-- Asks about a workspace folder by name (Atelier, Chrysalis, Praxis, Foundry, Nexus, Scriptorium, Tesseract, or the document repo)
+- Asks about a workspace folder by name or role
 - Wants to move or graduate content to permanent storage
 - Seems confused about vault structure, naming, or placement
 

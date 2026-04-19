@@ -1,6 +1,6 @@
 # ZettleDeck — Promote Mode
 
-Promotes content from workspaces (Atelier, Chrysalis, Foundry, etc.) into the document repository with full ZettleDeck structure. This is the moment scope is assigned, zettldex address determined, frontmatter completed, and placement within the repo decided.
+Promotes content from a workspace into the document repository with full ZettleDeck structure. This is the moment scope is assigned, zettldex address determined, frontmatter completed, and placement within the repo decided.
 
 Before starting, resolve the document repository folder: find the entry in `workspaceFolders` (in `.zettledeck/core/config.json`) where `role == "documentRepo"` and read its `folder` field. This is the destination for all promoted content. If no such entry exists, stop and tell the user: "No documentRepo role found in workspaceFolders — check your .zettledeck/core/config.json."
 

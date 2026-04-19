@@ -85,7 +85,7 @@ The [[#Reliquary]] is the final destination for anything worth keeping permanent
 
 ## Workspaces
 
-Eight workspaces. Each is a top-level folder. Not every project uses every workspace — install the modules that provide the ones you need. Core scaffolds Atelier, Chrysalis, and Reliquary. Add-on modules scaffold the rest.
+Eight workspaces. Each is a top-level folder. Not every project uses every workspace — install the modules that provide the ones you need. Core scaffolds Nexus and Reliquary. Add-on modules scaffold the rest.
 
 ### Atelier
 
@@ -100,7 +100,7 @@ Items here are ephemeral by default. They graduate to wherever they ultimately b
 
 Tooling for routing Atelier items to their destinations is on the roadmap — for now, graduate files by hand or use `/zettledeck promote` when the destination is the Reliquary.
 
-**Scaffolded by:** `zettledeck-core`.
+**Scaffolded by:** `zettledeck-ideation`.
 
 ### Chrysalis
 
@@ -114,7 +114,7 @@ Periodically review Chrysalis to:
 
 The Chrysalis honors the Zettelkasten's emergent-structure principle: nothing gets forced into a predetermined category. Ideas declare what they're becoming by what they connect to and how they develop.
 
-**Scaffolded by:** `zettledeck-core`.
+**Scaffolded by:** `zettledeck-ideation`.
 
 ### Praxis
 
@@ -144,7 +144,7 @@ Content in the Nexus is the output of looking across the vault and finding what'
 
 The Nexus is what turns an accumulation of notes into something that thinks with you.
 
-**Scaffolded by:** `zettledeck-nexus`.
+**Scaffolded by:** `zettledeck-core`.
 
 ### Reliquary
 

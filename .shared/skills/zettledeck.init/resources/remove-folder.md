@@ -29,11 +29,10 @@ If no flag is provided, ask:
 
 ```
 Current Workspace Folders
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  #  Folder        Role           Enabled  Description
- 1  Atelier/      jots           yes      A place for quick notes and capturing ideas
- 2  Chrysalis/    ideation       yes      A place to expand and incubate ideas
- 3  Reliquary/    documentRepo   yes      Permanent document repository  [required]
+ 1  Nexus/        nexus          yes      Vault intelligence — knowledge graph analysis, idea surfacing, and reflection  [required]
+ 2  Reliquary/    documentRepo   yes      Permanent document repository  [required]
 ```
 
 Ask: "Which workspace folder would you like to remove? Enter the number."
