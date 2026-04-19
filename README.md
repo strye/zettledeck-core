@@ -1,20 +1,89 @@
 # zettledeck-core
 
-A project template for ZettleDeck — a structured markdown system for personal knowledge management, built on Obsidian.
+The template repo and foundation for **ZettleDeck** — a personal knowledge and work-management framework that marries the [Zettelkasten](https://zettelkasten.de/introduction/) tradition with [Andrej Karpathy's LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f), compatible with markdown tools (Obsidian) and agentic AI tools (Claude Code, Kiro).
 
-## What This Is
+## Why ZettleDeck
 
-ZettleDeck is an opinionated knowledge management framework for Obsidian, built on the spirit of [Zettelkasten](https://en.wikipedia.org/wiki/Zettelkasten). It organizes knowledge through metadata and connections rather than rigid folder hierarchies — documents can live anywhere in the vault and remain meaningfully grouped through shared scope IDs.
+### The Zettelkasten problem — and why people abandon it
 
-Clone this template to start a new vault project. It includes:
+Niklas Luhmann's Zettelkasten wasn't a filing cabinet. It was a thinking partner — tens of thousands of atomic notes connected by explicit links, where the *reason for the link* was itself the knowledge being created. Structure emerged from use, not from predetermined categories. Ideas recombined in ways their author hadn't anticipated. Luhmann credited the system as a genuine collaborator in his prolific output.
 
-- **Scope-based organization** — every document belongs to a scope, linked by a shared `scopeId`. Physical location in the vault is flexible; relationships are carried by metadata.
-- **Vault steering** — structural rules and reference documentation for document types, hierarchical addressing, placement, and frontmatter
-- **Markdown conventions** — rules for frontmatter management, wikilinks, editing practices, and status values
-- **Task management** — Obsidian Tasks plugin format with emoji signifiers, attribution patterns, priority levels, and archival conventions
-- **Obsidian vault skill** — CLI-based vault interaction (search, read, create, append, move, tags, links, tasks, properties)
-- **Project initialization** — interactive setup skill (`/zettledeck.init`) that walks you through customizing all configuration
-- **Module composer** — the `zd` script for installing add-on modules
+The principles are as true today as they were in 1952:
+
+- **Atomicity** — one idea per note, so ideas can recombine like molecules.
+- **Connection, not collection** — the value lives in the links, and the *explicit why* of each link is knowledge being created.
+- **Emergent structure** — organization grows organically from the material, not imposed top-down.
+- **Thinking partner, not storage** — the system surfaces patterns and tensions you didn't yet see.
+
+But a working Zettelkasten is *brutal* to maintain. Updating cross-references, keeping summaries current, flagging contradictions when new material lands, pruning stale claims, noticing what's missing — the bookkeeping grows faster than the value. That's why most personal wikis die. Humans get bored of maintenance; the maintenance is what makes the wiki worth having.
+
+### What changed: the LLM does the bookkeeping
+
+Karpathy's [LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) points out what's newly possible: **LLMs don't get bored.** An LLM can ingest a new source, touch fifteen pages to update summaries and cross-references, flag contradictions with what it read last month, and file the result — in one pass, on every source. The wiki stays alive because the manual cost of maintenance drops to near zero. You curate sources, ask good questions, and think about what it all means. The LLM handles everything else: summarizing, cross-referencing, filing, linting, noticing what's missing.
+
+Three layers: **raw sources** (immutable), **the wiki** (LLM-written, interlinked), **the schema** (how *this* wiki works). Three core operations: **ingest**, **query**, **lint**. You read the wiki; the LLM writes it. The LLM is the programmer; the wiki is the codebase; any markdown viewer (Obsidian, VS Code, your editor of choice) is the IDE.
+
+### ZettleDeck = Zettelkasten spirit + LLM Wiki mechanics + work-management scaffolding
+
+ZettleDeck takes the Zettelkasten philosophy (atomicity, explicit connections, emergent structure, thinking partner) and the LLM Wiki implementation (the LLM owns maintenance) and wraps them in a practical work-management framework that acknowledges: ideas don't arrive ready to file. They need to be captured messily, incubated, researched, shaped, and *then* graduated into permanent structure.
+
+So ZettleDeck gives ideas room to mature before they earn their place in the Zettelkasten.
+
+#### Ideas move through workspaces, at their own pace
+
+Every piece of work lives in one of eight **workspaces** — each a top-level folder with a specific purpose. Nothing has to be filed correctly on arrival:
+
+- **Atelier** — raw capture. A passing thought, a half-formed question. No format, no expectations.
+- **Chrysalis** — incubation. When something shows enough life to revisit, it moves here. Fragments connect, patience does the work, dead ends get discarded.
+- **Tesseract** — research. External investigation, gathered and processed.
+- **Foundry** — content crafting. Ideas with shape get refined into finished artifacts.
+- **Nexus** — the thinking partner. Looks inward across everything you've accumulated to surface patterns, contradictions, and implicit ideas — the Karpathy pattern, extended. This is the Zettelkasten's emergent intelligence made operational.
+- **Scriptorium** — correspondence. Emails and messages that need thought but not the full Foundry treatment.
+- **Praxis** — daily practice. Diary, tasks, ruthless priorities — the operational backbone.
+- **Reliquary** — the permanent collection, and the Zettelkasten proper. Anything worth keeping graduates here with full structure — scope, addressing, frontmatter, explicit links.
+
+```
+Atelier → Chrysalis → ┬── Foundry ───→ Reliquary
+                ↑     ├── Tesseract → Reliquary / Foundry / Nexus / Chrysalis
+                │     └── Nexus ─────→ Chrysalis / Foundry
+                │                        ↑
+                └────────── research loop back for further refinement
+Praxis ─────────────────────── runs underneath everything
+  └── Scriptorium
+```
+
+*See [The Way](ZDocs/guides/theWay.md) for the full flow narrative and how ideas graduate between workspaces.*
+
+#### Inside the Reliquary: the Zettelkasten itself
+
+Vault-structured documents carry their relationships in metadata, echoing Luhmann's branching index but letting folder placement stay flexible:
+
+- Every document has a **scopeId** — a 4-digit identifier binding it to a knowledge domain. All documents sharing a scopeId belong to the same scope, regardless of folder. Reorganize freely; the connections hold.
+- Every document has a **docType** (scope, focus, project, objective, content, note) with rules for placement, subTypes, and valid parents — so atomicity is preserved at the right granularity for each kind of thought.
+- **Wikilinks carry the explicit "why"** — in the Zettelkasten tradition, a link without a reason is a missed thought.
+- **Folders are a hint, not a source of truth.** Metadata and links are canonical.
+
+*See [Vault Structure](ZDocs/guides/vault-structure.md) for the complete model — document types, zettldex addressing, frontmatter, placement rules.*
+
+#### The Nexus: where it all becomes a thinking partner
+
+The Nexus skill implements Karpathy's ingest / query / lint pattern over your entire vault, plus a fourth operation — **discover** — that proactively surfaces implicit ideas, cross-domain connections, evolving positions, and tension points. This is what turns an accumulation of notes into something that thinks with you. It's the Luhmann promise, finally practical.
+
+#### You get an assistant that knows all of this
+
+ZettleDeck ships with a four-layer personal assistant (profile, accommodations, personality, PA framework) that loads into every session. It knows the workspaces, the vault structure, your identity and preferences, and runs GTD / RITMO-style daily and weekly review. It recommends before it acts — you stay in the driver's seat. You curate; it maintains.
+
+*See [The Personal Assistant](ZDocs/guides/personal-assistant/README.md) for the four-layer architecture and how to customize it into something genuinely personal.*
+
+## What This Repo Provides
+
+`zettledeck-core` is the template you clone to start a new ZettleDeck project. It provides the foundation; add-on modules (praxis, nexus, foundry, etc.) layer on the workspace scaffolding, skills, and agents for each stage of the flow.
+
+- **A project template** — clone it to start a new ZettleDeck vault
+- **A module composer** — `zd`, a CLI that installs add-on modules and wires them into Claude Code or Kiro
+- **An init system** — `/zettledeck.init`, an interactive skill that walks you through configuration
+- **Core skills** — `zettledeck` (methodology + promote), `zettledeck.init` (setup), `markdown` (conventions), `vault` (file analysis)
+- **The four-layer assistant** — identity, accommodations, persona, and PA framework, loaded every session
 
 ## Quick Start
 
@@ -23,226 +92,70 @@ Clone this template to start a new vault project. It includes:
 git clone https://github.com/strye/zettledeck-core.git my-vault
 cd my-vault
 
-# 1.3 OPTIONAL Remove the `.git` folder and revision history
+# 1b. OPTIONAL Remove the `.git` folder and revision history
 # rm -rf .git
 
 # 2. Install CLI dependencies (jq and yq) — run once, auto-detects your platform
 .zettledeck/scripts/bootstrap
 
-# 3. Wire up your AI tool and install any declared modules
-#    (Create `.claude` and/or `.kiro` folder(s) first)
+# 3. Create the tool directory for your AI tool (one or both)
+mkdir .claude    # for Claude Code
+mkdir .kiro      # for Kiro
+
+# 4. Declare any add-on modules in .zettledeck/zettledeck.yml
+#    (optional — you can start with just core)
+
+# 5. Wire the tool(s) and install declared modules
 .zettledeck/scripts/zd setup
 
-# 4. Run core init (in Claude Code or Kiro) — configures vault identity,
-#    folder structure, task paths. Modules need this context.
+# 6. Run core init (in Claude Code or Kiro) — configures vault identity,
+#    folder structure, document types, scope ID method
 /zettledeck.init core
 
-# 5. Run module init (in Claude Code or Kiro) — discovers and configures
-#    module-specific settings now that their init-steps are available
+# 7. Run module init (in Claude Code or Kiro) — discovers and configures
+#    any modules installed in step 5
 /zettledeck.init
 ```
 
-## Project Structure
+## Documentation
 
-```
-my-vault/
-├── .shared/                        # Shared assets (hidden from vault)
-│   ├── skills/
-│   │   ├── markdown/               # Reference — markdown conventions + task format
-│   │   ├── zettledeck/             # Core methodology — help, promote, vault rules
-│   │   │   └── resources/
-│   │   │       ├── vault-steering.md   # Structural rules (static)
-│   │   │       ├── vault-defaults.md   # Reference docs for document types
-│   │   │       └── the-way.md          # System philosophy and workspace flow
-│   │   └── zettledeck.init/        # Invocable — interactive project setup
-│   │       └── resources/
-│   │           └── core.md
-│   ├── agents/                     # Agent definitions
-│   ├── steering/                   # Steering files
-│   └── templates/                  # Template files
-├── .zettledeck/                    # Infrastructure (hidden from vault)
-│   ├── zettledeck.yml              # Add-on module manifest
-│   ├── core/
-│   │   └── config.json             # Vault configuration (edit directly or via init)
-│   ├── init-state.yml              # Init tracking (created by /zettledeck.init)
-│   └── scripts/
-│       └── zd                      # Module composer CLI
-├── .claude/                        # Claude Code wiring (created by zd setup)
-│   ├── skills → ../.shared/skills
-│   └── agents → ../.shared/agents
-├── .kiro/                          # Kiro wiring (created by zd setup)
-│   ├── skills → ../.shared/skills
-│   ├── steering → ../.shared/steering
-│   └── agents/                     # Individual symlinks + generated JSON
-├── Reliquary/                      # The vault — permanent structured knowledge
-└── README.md
-```
+Full documentation lives in [`ZDocs/`](ZDocs/README.md) and is split between evergreen guides and per-module reference.
 
-## The `zd` Script
+**Guides — methodology and process:**
 
-Located at `.zettledeck/scripts/zd`. Manages add-on modules and tool wiring.
+- [The Way](ZDocs/guides/theWay.md) — philosophy, workspace flow, and the system-vs-vault distinction
+- [Vault Structure](ZDocs/guides/vault-structure.md) — scopes, scopeIds, document types, frontmatter, placement rules
+- [The Personal Assistant](ZDocs/guides/personal-assistant/README.md) — the four-layer architecture and how to customize it
+- [Building Modules](ZDocs/guides/building-modules/README.md) — for authors extending ZettleDeck
 
-```bash
-zd setup     # Wire AI tools (symlinks) and install declared modules — run this first
-zd install   # Install add-on modules from zettledeck.yml (also called by setup)
-zd update    # Update installed modules to latest
-zd status    # Show installed modules and wiring status
-```
+**Core reference — what core ships:**
 
-### What `zd install` Does
-
-1. Reads module declarations from `.zettledeck/zettledeck.yml`
-2. Clones each module to a temp directory
-3. Copies assets into `.shared/` (skills, agents, steering, templates)
-4. Copies module scripts into `.zettledeck/scripts/`
-5. Marks each module as `pending` in `.zettledeck/init-state.yml`
-6. Auto-wires any new Kiro agents (symlinks + JSON companions)
-7. Cleans up temp files
-
-### What `zd setup` Does
-
-One-time setup that wires AI tools to `.shared/` and then installs any declared modules. Run once after cloning.
-
-- **Claude Code**: symlinks `.claude/skills` and `.claude/agents` to `.shared/`
-- **Kiro**: symlinks `.kiro/skills` and `.kiro/steering` to `.shared/`, creates individual agent symlinks with companion JSON files
-- **Modules**: automatically runs `zd install` if modules are declared in `zettledeck.yml`
-
-### Module Configuration
-
-Edit `.zettledeck/zettledeck.yml`:
-
-```yaml
-modules:
-  - name: zettledeck-praxis
-    repo: github.com/strye/zettledeck-praxis
-    ref: main
-```
-
-### Requirements
-
-- `git`
-- `jq` and `yq` — run `.zettledeck/scripts/bootstrap` to install automatically
-- **Windows**: requires WSL (Windows Subsystem for Linux). The `zd` script uses bash and symlinks, which are not natively supported on Windows outside of WSL.
-
-## Skills
-
-### markdown (reference)
-
-Loaded automatically when working with markdown files or tasks. Defines:
-- Obsidian compatibility (wikilinks, CommonMark)
-- Frontmatter structure and preservation rules
-- Status value lifecycle
-- Editing practices
-- Task format rules (Obsidian Tasks emoji signifiers, priority markers, attribution patterns, waiting-for format, RP alignment tags)
-
-Archive and inbox paths are project-specific. Configure during `/zettledeck.init core`.
-
-### zettledeck (invocable + reference)
-
-Core methodology skill. Provides vault structure reference, conversational help, and content promotion. Other skills draw on `zettledeck/resources/vault-steering.md` and `vault-defaults.md` for document type and placement rules.
-
-```
-/zettledeck help [question]   — Answer questions about ZettleDeck concepts
-/zettledeck promote [file]    — Promote content to the Reliquary with full vault structure
-```
-
-The `promote` workflow reads the source document, infers docType, scope, and placement, then walks through a confirmation wizard before applying frontmatter and moving the file.
-
-**Vault interaction** (search, create, move, tasks, etc.) is provided by the `zettledeck-obsidian` module.
-
-### zettledeck.init (invocable)
-
-Interactive project setup. Two workflows:
-
-1. **Wizard mode:** Run `/zettledeck.init core` to walk through guided setup. Writes `.zettledeck/core/config.json`.
-2. **Manual mode:** Edit `.zettledeck/core/config.json` directly. Changes take effect immediately.
-
-```
-/zettledeck.init              Run all available init steps
-/zettledeck.init core         Core setup wizard
-/zettledeck.init <module>     Module-specific setup
-/zettledeck.init status       Show what's configured
-```
-
-Covers: vault identity, folder structure, document types, task paths, naming conventions. All configuration is stored in `.zettledeck/core/config.json` (user-editable). Each installed module can contribute its own init steps with their own config files.
-
-## The ZettleDeck Methodology
-
-ZettleDeck is built on one core idea: **relationships between documents should be carried by metadata, not folder location**.
-
-### Scopes and ScopeIds
-
-Every document in a ZettleDeck vault has a `scopeId` — a numeric identifier that binds it to a knowledge domain. All documents sharing a `scopeId` belong to the same scope, regardless of where they physically live in the vault.
-
-Each scope has exactly one **scope document** (prefix `S`) — a lightweight overview file that serves as the anchor and entry point for that domain. From it you can navigate every related focus, project, note, and piece of content in the scope.
-
-```
-S1001_CareerDevelopment    ← scope document (the anchor)
-  F1001_SkillBuilding      ← focus under this scope
-  P1001_CertificationPlan  ← project under this scope
-  N1001_BookNotes          ← note that could live anywhere
-```
-
-All four files share `scopeId: "1001"`. The note could be filed under any folder — its metadata connects it back to the scope.
-
-Scope IDs are always 4-digit zero-padded strings — `"0001"` not `"1"`, `"0999"` not `"999"`. This applies in frontmatter, filenames, zettldex values, and tags.
-
-### Why This Matters
-
-In a traditional folder system, moving a document breaks its organizational context. In ZettleDeck, you can reorganize your vault freely — the `scopeId` always preserves the semantic relationship. This is the Zettelkasten principle applied to structured knowledge work: connections over containers.
-
-### Scope ID Methods
-
-How scope IDs are assigned is configurable:
-
-| Method | How it works |
-|--------|-------------|
-| **assignedRanges** | Each top-level folder owns a numeric range tied to its prefix. `10_Personal/` owns IDs 1000–1999. IDs immediately signal which domain a document belongs to. |
-| **incremental** | A single global counter increments for every new scope. Simpler, no range boundaries. |
-
-Configure in `.zettledeck/core/config.json` via `scopeMethod`.
-
----
-
-## Vault Configuration
-
-Core vault configuration is stored in `.zettledeck/core/config.json`:
-
-- **workspaceFolders** — Active working areas at the vault root (Atelier, Chrysalis, Reliquary, etc.). Role-keyed — skills resolve folder names via `role`, so physical folders can be renamed freely. The entry with `role: "documentRepo"` locates the permanent storage folder. Modules register entries at install time; users manage entries via `/zettledeck.init add-folder --workspace`.
-- **scopeMethod** — `assignedRanges` or `incremental`
-- **repositoryFolders** — Internal folder structure *inside* the document repository (with ranges if using assignedRanges). Distinct from workspace folders — these are partitions within the Reliquary, not root folders.
-- **scopeSubTypes** — What kinds of scopes live in each repository folder
-- **prefixesEnabled** — Whether to use single-letter prefixes on filenames (e.g., `P1001_ProjectName`)
-
-Edit this file directly, or run `/zettledeck.init core` to walk through the setup wizard.
-
-Vault name and path are configured by the `zettledeck-obsidian` module (`.zettledeck/zettledeck-obsidian/config.json`). Task inbox and archive paths are configured by the `zettledeck-praxis` module.
-
-### Vault Steering Rules
-
-Two files inside the `zettledeck` skill define how the vault works:
-
-- `zettledeck/resources/vault-steering.md` — the structural engine (addressing, front-matter spec, tag rules, validation)
-- `zettledeck/resources/vault-defaults.md` — reference documentation showing default structure and document types
+- [Overview & Project Structure](ZDocs/modules/core/README.md)
+- [The `zd` Script](ZDocs/modules/core/zd-script.md) — commands, module contribution, requirements
+- [Core Skills](ZDocs/modules/core/skills.md) — `zettledeck`, `zettledeck.init`, `markdown`, `vault`
+- [Configuration](ZDocs/modules/core/configuration.md) — `.zettledeck/core/config.json` key by key
 
 ## Available Modules
 
-| Module | Purpose | Repo |
-|--------|---------|------|
-| **zettledeck-core** | Foundation — conventions, vault skill, compose tool | (this repo) |
-| **zettledeck-praxis** | Daily practice — diary, email, comms, priorities | Coming soon |
-| **zettledeck-nexus** | Knowledge intelligence — vault analysis, ideas, reflection | Coming soon |
-| **zettledeck-foundry** | Content creation — research, composition, versioning | Coming soon |
-| **rostrum-blackboard** | Human-conducted blackboard orchestration | Coming soon |
+
+| Module                  | Purpose                                                                 | Status      |
+| ------------------------- | ------------------------------------------------------------------------- | ------------- |
+| **zettledeck-core**     | Foundation — template, composer, core skills                           | (this repo) |
+| **zettledeck-praxis**   | Daily practice — diary, email, tasks, comms, weekly reshape            | Available   |
+| **zettledeck-nexus**    | Vault intelligence — graph analysis, ideas, reflection, contradictions | Available   |
+| **zettledeck-foundry**  | Content creation — deep research, writing, content versioning          | Available   |
+| **zettledeck-obsidian** | Optional bridge to an external Obsidian vault via the obsidian-cli      | Available   |
+| **rostrum-blackboard**  | Human-conducted blackboard pattern                                      | Available   |
+
+Declare them in `.zettledeck/zettledeck.yml` to install. See [Building Modules](ZDocs/guides/building-modules/README.md) if you want to create your own.
 
 ## Tool Compatibility
 
-ZettleDeck works with AI coding tools that support skill discovery:
+ZettleDeck is a collection of markdown files plus agent instructions. It deals in plain markdown — any viewer or editor can open the vault.
 
-- **Claude Code** — `.claude/skills` and `.claude/agents` symlink to `.shared/`; steering referenced in `CLAUDE.md`
-- **Kiro IDE** — `.kiro/skills` and `.kiro/steering` symlink to `.shared/`; agents get individual symlinks with companion JSON
+**Agentic tools** (the assistant side — required for ingest, query, lint, discover): **Claude Code** and **Kiro IDE** are supported. Run `zd setup` to wire whichever tools you have. Full wiring details in [The `zd` Script](ZDocs/modules/core/zd-script.md).
 
-Run `zd setup` to configure wiring for your tool automatically.
+**Markdown viewers** (the human side — optional, pick what suits you): ZettleDeck neither requires nor assumes Obsidian. Use Obsidian, VS Code, iA Writer, a terminal pager — whatever lets you read markdown. The `zettledeck-obsidian` module is an optional add-on for users who want skills that drive an external Obsidian vault via `obsidian-cli`; core does not depend on it. **Better together, complete apart.**
 
 ## License
 

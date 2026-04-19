@@ -1,1 +1,0 @@
-Zettle Core
